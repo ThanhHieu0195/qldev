@@ -1,0 +1,45 @@
+". Cải tiến trang: “building/detail_building_implement.php”
+1. Phát sinh hạng mục:
+a. Hạng mục có thể phát sinh (tăng khối lượng thi công) khi hạng mục đang ở trạng thái <=4 (đang thi công)
+b. Gồm 2 trường hợp: phát sinh hạng mục mới, và phát sinh khối lượng thi công hạng mục hiện tại
+c. Từ trang “building/detail_building_implement.php”, khi user click vào nút “Phát sinh hạng mục”->chọn nhóm hạng mục->chọn hạng mục -> thêm
+d. Nếu hạng mục đã có sẳn trong công trình thì popup form update gồm:
+i. Ngày yêu cầu = current date
+ii. Khối lượng ban đầu (hidden): khối lượng thực tế 
+iii. Khối lượng phát sinh: input (number)
+iv. Nhân viên yêu cầu: current_account()
+v. Trạng thái (hidden): 0 
+vi. Ghi chú: textarea
+e. Nếu hạng mục chưa có trong công trình thì popup form add gồm:
+i. Ngày yêu cầu = current date
+ii. Khối lượng ban đầu (hidden): 0 
+iii. Khối lượng phát sinh: input (number)
+iv. Nhân viên yêu cầu: current_account()
+v. Trạng thái (hidden): 0 
+vi. Ghi chú: textarea
+f. Khi submit form thì thêm vào table yeucauthaydoihangmuc đầy đủ các trường trừ “nhanvienduyet”
+
+2. Phát sinh vật tư:
+a. Vật tư có thể phát sinh khi hạng mục đang ở trạng thái <=4 (đang thi công)
+b. Từ trang “building/detail_building_implement.php”, khi user click vào nút “Phát sinh” tại các “Chi tiết vật tư hạng mục” thì popup form phát sinh
+i. Ngày yêu cầu = current date
+ii. Select chọn vật tư của hạng mục tương ứng
+iii. Số lượng ban đầu (hidden): Số lượng thực tế nếu vật tư có sẵn hoặc =0 nếu chưa có 
+iv. Số lượng phát sinh: input (number)
+v. Nhân viên yêu cầu: current_account()
+vi. Trạng thái (hidden): 0 
+vii. Ghi chú: textarea
+c. Khi submit form thì thêm vào table yeucauthaydoivattu đầy đủ các trường trừ “nhanvienduyet”
+
+3. Thêm trang Duyệt phát sinh:
+a. Dạng datatable liệt kê tất cả các yêu cầu thay đổi hạng mục và yêu cầu thay đổi vật tư (UNION ALL 2 tables, sort by idcongtrinh, idhangmuc, INNER JOIN chitiethangmuccongtrinh để có cột “ngaybatdau”, INNER JOIN danhsachcongtrinh để có tên công trình)
+b. Gồm các cột: Tên công trình, Tên hạng mục, Loại yêu cầu (Hạng mục/Vật tư), Tên vật tư (nếu yêu cầu hạng mục thì = empty), Lượng ban đầu, Lượng phát sinh, Nhân viên yêu cầu, Ghi chú, Chức năng
+c. Khi click vào cột chức năng popup form confirm là Duyệt hoặc Từ chối yêu cầu. Khi bấm submit form thì action tương ứng
+d. Khi yêu cầu được duyệt:
+i. Nếu yêu cầu thêm khối lượng hạng mục: Update chitiethangmuccongtrinh: khoiluongphatsinh = khoiluongphatsinh + khoiluongthaydoi, ghichu=”Phát sinh”
+ii. Nếu yêu cầu thêm hạng mục mới: Insert table chitiethangmuccongtrinh: idcongtrinh, idhangmuc, dongiahangmuc, khoiluongphatsinh, ghichu=”Phát sinh”
+iii. Nếu yêu cầu phát sinh thêm vật tư: Insert table chitietvattucongtrinh: id, idcongtrinh, idhangmuc, idvattu, dongiavattu, soluongphatsinh, ghichu=”Phát sinh”
+iv. Gọi hàm update_over_money trong danhsachcongtrinh models để cập nhật lại Giá trị phát sinh của công trình 
+
+4. Thêm lịch sử phát sinh vào trang “building/detail_building_implement/part-detail-changerequest.php”: liệt kê tất cả các phát sinh của công trình
+"

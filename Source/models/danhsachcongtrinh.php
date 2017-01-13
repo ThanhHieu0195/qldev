@@ -69,8 +69,9 @@ class list_building extends database {
     }
     function update_expect_money($id) {
         $sql = "SELECT (SUM_MONEY_FIRT.SUM+SUM_MATERIAL.SUM) TOTAL_EXPECT_MONEY 
-        FROM (SELECT SUM(dudoanchiphibandau) AS SUM FROM chitiethangmuccongtrinh WHERE idcongtrinh = $id) as SUM_MONEY_FIRT, (SELECT IF(SUM(giadutoan) is null, 0, SUM(giadutoan)) AS SUM FROM chitietvattucongtrinh 
+        FROM (SELECT SUM(khoiluongdutoan*dongiahangmuc) AS SUM FROM chitiethangmuccongtrinh WHERE idcongtrinh = $id) as SUM_MONEY_FIRT, (SELECT IF(SUM(dongiavattu*soluongdutoan) is null, 0, SUM(dongiavattu*soluongdutoan)) AS SUM FROM chitietvattucongtrinh 
         WHERE idcongtrinh = $id) as SUM_MATERIAL";
+        //error_log ("Add new " . $sql , 3, '/var/log/phpdebug.log');
         $this->setQuery($sql);
         $result = $this->query();
         $row = mysql_fetch_object($result);
@@ -84,7 +85,7 @@ class list_building extends database {
 
     function update_real_money($id) {
         $sql = "SELECT (SUM_MONEY_FIRT.SUM+SUM_MATERIAL.SUM) TOTAL_EXPECT_MONEY
-        FROM (SELECT SUM(chiphithucte) AS SUM FROM chitiethangmuccongtrinh WHERE idcongtrinh = $id) as SUM_MONEY_FIRT, (SELECT IF(SUM(giathucte) is null, 0, SUM(giathucte)) AS SUM FROM chitietvattucongtrinh
+        FROM (SELECT SUM(khoiluongthucte*dongiahangmuc) AS SUM FROM chitiethangmuccongtrinh WHERE idcongtrinh = $id) as SUM_MONEY_FIRT, (SELECT IF(SUM(dongiavattu*soluongthucte) is null, 0, SUM(dongiavattu*soluongthucte)) AS SUM FROM chitietvattucongtrinh
         WHERE idcongtrinh = $id) as SUM_MATERIAL";
         $this->setQuery($sql);
         $result = $this->query();
@@ -99,7 +100,7 @@ class list_building extends database {
 
     function update_over_money($id) {
         $sql = "SELECT (SUM_MONEY_FIRT.SUM+SUM_MATERIAL.SUM) TOTAL_EXPECT_MONEY
-        FROM (SELECT SUM(chiphiphatsinh) AS SUM FROM chitiethangmuccongtrinh WHERE idcongtrinh = $id) as SUM_MONEY_FIRT, (SELECT IF(SUM(giaphatsinh) is null, 0, SUM(giaphatsinh)) AS SUM FROM chitietvattucongtrinh
+        FROM (SELECT SUM(khoiluongphatsinh*dongiahangmuc) AS SUM FROM chitiethangmuccongtrinh WHERE idcongtrinh = $id) as SUM_MONEY_FIRT, (SELECT IF(SUM(dongiavattu*soluongphatsinh) is null, 0, SUM(dongiavattu*soluongphatsinh)) AS SUM FROM chitietvattucongtrinh
         WHERE idcongtrinh = $id) as SUM_MATERIAL";
         $this->setQuery($sql);
         $result = $this->query();

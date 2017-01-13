@@ -13,28 +13,26 @@
  */
 include_once 'database.php';
 include_once 'helper.php';
+include_once '../config/constants.php';
 
 class detail_category_building extends database {
     public $_NAMETABLE = 'chitiethangmuccongtrinh';
-    public $_columns = array('ngaybatdau', 'ngaydukienketthuc', 'ngayketthuc', 'iddoithicong', 'dongiathicong', 'dongiadutoan', 'khoiluongdutoan', 'khoiluongthucte', 'khoiluongphatsinh', 'dudoanchiphibandau', 'chiphithucte', 'tiendachi', 'trangthai', 'ghichu', 'danhgiahoanthien', 'khoiluongthicong');
+    public $_COLUMN_NAME = array('idcongtrinh','idhangmuc','ngaydukienbatdau','ngaydukienketthuc','ngaybatdau','ngayketthuc','dongiahangmuc','khoiluongdutoan','khoiluongthucte','khoiluongphatsinh','iddoithicong','dongiathicong','tiendachi','trangthai','ghichu');
     public $_idcongtrinh = 'idcongtrinh';
     public $_idhangmuc = 'idhangmuc';
-    public $_ngaybatdau = 'ngaybatdau';
+    public $_ngaydukienbatdau = 'ngaydukienbatdau';
     public $_ngaydukienketthuc = 'ngaydukienketthuc';
+    public $_ngaybatdau = 'ngaybatdau';
     public $_ngayketthuc = 'ngayketthuc';
-    public $_iddoithicong = 'iddoithicong';
-    public $_dongiathicong = 'dongiathicong';
-    public $_dongiadutoan = 'dongiadutoan';
+    public $_dongiahangmuc = 'dongiahangmuc';
     public $_khoiluongdutoan = 'khoiluongdutoan';
     public $_khoiluongthucte = 'khoiluongthucte';
     public $_khoiluongphatsinh = 'khoiluongphatsinh';
-    public $_dudoanchiphibandau = 'dudoanchiphibandau';
-    public $_chiphithucte = 'chiphithucte';
+    public $_iddoithicong = 'iddoithicong';
+    public $_dongiathicong = 'dongiathicong';
     public $_tiendachi = 'tiendachi';
     public $_trangthai = 'trangthai';
     public $_ghichu = 'ghichu';
-    public $_danhgiahoanthien = 'danhgiahoanthien';
-    public $_khoiluongthicong = 'khoiluongthicong';
 
 
     public function getdetailupdate($id) {
@@ -54,43 +52,30 @@ class detail_category_building extends database {
         return $arr;
     }
 
-    public function insert($id, $id_category, $date_start="", $date_expect_finish="", $date_finish="", $id_group="", $construction_unit="", $expect_money=0, $actual_cost=0, $money_spent=0, $status=INIT, $assess=0, $work_load=0)
-    {
 
-        $sql = "insert into $this->_NAMETABLE ($this->_idcongtrinh,
-                                              $this->_idhangmuc,
-                                              $this->_ngaybatdau,
-                                              $this->_ngaydukienketthuc,
-                                              $this->_ngayketthuc,
-                                              $this->_iddoithicong,
-                                              $this->_dongiathicong,
-                                              $this->_dongiadutoan,
-                                              $this->_dudoanchiphibandau,
-                                              $this->_chiphithucte,
-                                              $this->_tiendachi,
-                                              $this->_trangthai,
-                                              $this->_danhgiahoanthien,
-                                              $this->_khoiluongthicong)
-                                     values (  '$id', 
-                                               '$id_category',
-                                               '$date_start', 
-                                               '$date_expect_finish', 
-                                               '$date_finish', 
-                                               '$id_group', 
-                                               '$construction_unit',
-                                               (select dongiathdutoan from hangmucthicong where id='$id_category'),
-                                               '$expect_money', 
-                                               '$actual_cost', 
-                                               '$money_spent', 
-                                               '$status', 
-                                               '$assess', 
-                                               '$work_load');";
-        $this->setQuery($sql);
-        error_log ("Add new " . $sql, 3, '/var/log/phpdebug.log');
+    public function insert( $param )
+    {
+        $val = implode( "','", $param );
+        $col = implode( ",",$this->_COLUMN_NAME );
+        $table = $this->_NAMETABLE;
+
+        $sql = "insert into $table($col) values('$val');";
+        //error_log ("Add new" . $sql, 3, '/var/log/phpdebug.log');
+        $this->setQuery( $sql );
         $result = $this->query();
-        if ($result) {
+        if ( $result ) {
             return true;
-        }  
+        }
+        return false;
+    }
+
+    public function updatedongia($idcongtrinh, $idhangmuc) {
+        $sql = "update chitiethangmuccongtrinh set dongiahangmuc=(select dongiathdutoan from hangmucthicong where id={$idhangmuc}) where idcongtrinh={$idcongtrinh} and idhangmuc={$idhangmuc}";
+        $this->setQuery( $sql );
+        $result = $this->query();
+        if ( $result ) {
+            return true;
+        }
         return false;
     }
 
@@ -106,54 +91,38 @@ class detail_category_building extends database {
         return $arr;
     } 
 
-    public function delete($id)
+    public function delete($conditions)
     {
-        $sql = "Delete from $this->_NAMETABLE where $this->_idcongtrinh = '$id';";
+        $where = "";
+        if ( count($conditions) > 0 ) {
+            $where = "where ".mergeTostr($conditions, "and ", "=");
+        }
+        $sql = "Delete from $this->_NAMETABLE $where;";
         $this->setQuery($sql);
         $result = $this->query();
         if ($result) {
             return true;
-        } 
+        }
         return false;
     }
+
     // id, id_category
     // date_start, date_expect_finish, date_finish, id_group, construction_unit,expect_money, actual_cost, money_spent, status, assess, work_load
-    public function update($params)
-    {
-        $set = "";
+    public function update($params, $conditions) {
         $where = "";
-        foreach ($params as $key => $value) {
-            if ($key == 'id_building') {
-                if (!empty($where)) {
-                    $where .= " AND ";
-                }
-                $where.="$this->_idcongtrinh = '$value'";
-            } else if ($key == 'id_category') {
-                if (!empty($where)) {
-                    $where .= " AND ";
-                }
-                $where.="$this->_idhangmuc = '$value'";
-            } else {
-                if (!empty($set)) {
-                    $set .= ", ";
-                }
-                $set .= $key . ' = "' . $value . '"'; 
-            }
+        if ( count($conditions) > 0 ) {
+            $where =  "where ".mergeTostr($conditions, "and", "=");
         }
 
-        if ((empty($params['id_category'])) && (empty($params['id_building']))) {
-            return false;
+        $set = "";
+        if ( count($params) > 0 ) {
+            $set = "set ".mergeTostr($params, ", ", " = ");
         }
 
-        $sql = "update $this->_NAMETABLE set $set where $where;";
-        // print_r($sql);
-        //error_log ("Add new" . json_encode($params), 3, '/var/log/phpdebug.log');
+        $sql = "UPDATE $this->_NAMETABLE $set $where;";
         $this->setQuery($sql);
         $result = $this->query();
-        if ($result) {
-            return true;
-        } 
-        return false;
+        return $result;
     }
 }
 

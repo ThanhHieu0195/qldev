@@ -57,6 +57,18 @@ class status_category_building extends database {
         } 
         return false;
     }
+
+
+    public function toanbotrangthai() {
+        $sql = "select id, mota from $this->_NAMETABLE;";
+        $this->setQuery($sql);
+        $result = $this->query();
+        $arr = array();
+        while ($row = mysql_fetch_row($result)) {
+            $arr[] = $row;
+        }
+        return $arr;
+    }
 }
 
 

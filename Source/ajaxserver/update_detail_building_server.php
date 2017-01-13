@@ -19,21 +19,28 @@
 				break;
 			case 'update-category':
 				$params = $_POST['params'];
+                                $conditions = $_POST['conditions'];
 				require_once "../models/chitiethangmuccongtrinh.php";
 				$detail_category_building = new detail_category_building();
-				$detail_category_building->update($params);
+				$detail_category_building->update($params, $conditions);
 				break;	
+                        case 'delete-category':
+                                $conditions = $_POST['conditions'];
+                                require_once "../models/chitiethangmuccongtrinh.php";
+                                require_once "../models/chitietvattucongtrinh.php";
+                                $detail_material_category = new detail_material_category();
+                                $detail_category_building = new detail_category_building();
+                                if ($detail_material_category->delete($conditions)) {
+                                    if ($detail_category_building->delete($conditions)) {
+                                        echo json_encode( array("result" => "1") );
+                                    } else { echo json_encode( array("result" => "0") ); }
+                                } else { echo json_encode( array("result" => "0") ); }
+                                break;
 			case 'update-detail-material-category':
 				$params = $_POST['params'];
+                                $conditions = $_POST['conditions'];
 				require_once "../models/chitietvattucongtrinh.php";
 				$detail_material_category = new detail_material_category();
-
-				$conditions = array('id'=>$params['id'],'id_building' => $params['id_building'], 
-						'id_category' => $params['id_category']);
-                                unset($params['id_material']);
-				unset($params['id_building']);
-				unset($params['id_category']);
-				unset($params['id']);
 				$result = $detail_material_category->update($params, $conditions);
 				echo json_encode( array("result" => $result) );
 				break;

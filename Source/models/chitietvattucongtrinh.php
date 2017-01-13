@@ -16,18 +16,18 @@ include_once 'helper.php';
 
 class detail_material_category extends database {
     public $_NAMETABLE = 'chitietvattucongtrinh';
-    public $_columns = array('soluongdutoan','soluongthucte','soluongphatsinh','giadutoan','giathucte','giaphatsinh','idnhacungcap','trangthai','ghichu');
+    public $_COLUMN_NAME = array('id', 'idcongtrinh','idhangmuc','idvattu','dongiavattu','soluongdutoan','soluongthucte','soluongphatsinh','soluongdamua','idnhacungcap','dongiamua','trangthai','ghichu');
 
     public $_idcongtrinh = 'idcongtrinh';
     public $_idhangmuc = 'idhangmuc';
     public $_idvattu = 'idvattu';
+    public $_dongiavattu = 'dongiavattu';
     public $_soluongdutoan = 'soluongdutoan';
     public $_soluongthucte = 'soluongthucte';
     public $_soluongphatsinh = 'soluongphatsinh';
-    public $_giadutoan = 'giadutoan';
-    public $_giathucte = 'giathucte';
-    public $_giaphatsinh = 'giaphatsinh';
+    public $_soluongdamua = 'soluongdamua';
     public $_idnhacungcap = 'idnhacungcap';
+    public $_dongiamua = 'dongiamua';
     public $_trangthai = 'trangthai';
     public $_ghichu = 'ghichu';
     public $_id = 'id';
@@ -52,64 +52,48 @@ class detail_material_category extends database {
     }
 
     public function takeLastId() {
-        $sql = "select id from $this->_NAMETABLE order by id desc;";
+        $sql = "select ifnull(max(id),0) as id from $this->_NAMETABLE;";
         $this->setQuery($sql);
         $result = $this->query();
-        $row = mysql_fetch_row($result);
-        if ( count($row) > 0 ) {
-            return $row[0];
+        $row = mysql_fetch_array($result);
+        if (is_array ( $row )) {
+            return $row ['id'];
         }
         return 0;
     }
 
-    public function insert($params)
+    public function insert( $param )
     {
-        $id_building = isset($params['id_building'])?$params['id_building']:'';
-        $id_category = isset($params['id_category'])?$params['id_category']:'';
-        $id_material = isset($params['id_material'])?$params['id_material']:'';
-        $id = isset($params['id'])?$params['id']:'';
-        $soluongdutoan = isset($params['soluongdutoan'])?$params['soluongdutoan']:'';
-        $soluongthucte = isset($params['soluongthucte'])?$params['soluongthucte']:'';
-        $soluongphatsinh = isset($params['soluongphatsinh'])?$params['soluongphatsinh']:'';
-        $giadutoan = isset($params['giadutoan'])?$params['giadutoan']:'';
-        $giathucte = isset($params['giathucte'])?$params['giathucte']:'';
-        $giaphatsinh = isset($params['giaphatsinh'])?$params['giaphatsinh']:'';
-        $sql = "insert into $this->_NAMETABLE($this->_idcongtrinh, $this->_idhangmuc, $this->_idvattu, $this->_id, $this->_soluongdutoan, $this->_soluongthucte, $this->_soluongphatsinh, $this->_giadutoan, $this->_giathucte, $this->_giaphatsinh) values('$id_building', '$id_category','$id_material', '$id','$soluongdutoan', '$soluongthucte','$soluongphatsinh','$giadutoan','$giathucte','$giaphatsinh');";
-        $this->setQuery($sql);
+        $val = implode( "','", $param );
+        $col = implode( ",",$this->_COLUMN_NAME );
+        $table = $this->_NAMETABLE;
 
-        // print_r($sql);
+        $sql = "insert into $table($col) values('$val');";
+        //error_log ("Add new" . $sql, 3, '/var/log/phpdebug.log');
+        $this->setQuery( $sql );
         $result = $this->query();
-        if ($result) {
+        if ( $result ) {
             return true;
-        }  
+        }
         return false;
     }
 
     public function update($params, $conditions) {
         $where = "";
-        $set = "";
-        //error_log ("Add new" . json_encode($params) . json_encode($conditions), 3, '/var/log/phpdebug.log');
-        foreach ($params as $key => $value) {
-            if (!empty($set)) {
-                $set .= ", ";
-            }
-            $set .= $key . ' = "' . $value . '"';
+        if ( count($conditions) > 0 ) {
+            $where =  "where ".mergeTostr($conditions, "and", "=");
         }
 
-        if ( count($conditions > 0) ) {
-            $where = "where ".mergeTostr($conditions, 'and', '=', $this->_NAME_COLUMN);
-        }  
+        $set = "";
+        if ( count($params) > 0 ) {
+            $set = "set ".mergeTostr($params, ", ", " = ");
+        }
 
-        $sql = "UPDATE $this->_NAMETABLE set $set $where;";
-        //error_log ("Add new" . $sql, 3, '/var/log/phpdebug.log');
+        $sql = "UPDATE $this->_NAMETABLE $set $where;";
+        error_log ("Add new" . $sql, 3, '/var/log/phpdebug.log');
         $this->setQuery($sql);
-
-        // print_r($sql);
         $result = $this->query();
-        if ($result) {
-            return true;
-        }  
-        return false;
+        return $result;
     }
 
     public function is_exists ($params)
@@ -127,14 +111,19 @@ class detail_material_category extends database {
         return false;
     }
 
-    function delete($params) {
-        if ( count($params) > 0 ) {
-            $where = mergeTostr($params, 'and', '=', $this->_NAME_COLUMN);
-            $sql = "delete from $this->_NAMETABLE where $where";
-            $this->setQuery($sql);
-            $result = $this->query();
-            return $result;
+    public function delete($conditions)
+    {
+        $where = "";
+        if ( count($conditions) > 0 ) {
+            $where = "where ".mergeTostr($conditions, "and ", "=");
         }
+        $sql = "Delete from $this->_NAMETABLE $where;";
+        $this->setQuery($sql);
+        $result = $this->query();
+        if ($result) {
+            return true;
+        }
+        return false;
     }
 
     public $_NAME_COLUMN = array('id_building'=>'idcongtrinh', 

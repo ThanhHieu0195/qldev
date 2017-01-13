@@ -2,7 +2,7 @@
 require_once '../part/common_start_page.php';
 // Authenticate
 do_authenticate(G_MANAGER_BUILDING_1, F_LIST_BUILDING_REAL_DATA, TRUE);
-require_once "detail_building/init.php";
+require_once "detail_building_realdata/init.php";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -22,7 +22,7 @@ require_once "detail_building/init.php";
     <!--  -->
     <script type="text/javascript" src="../resources/scripts/utility/building/function-support.js"></script>
     <script type="text/javascript" language="javascript" src="../resources/datatable/js/jquery.dataTables.js"></script>
-    <?php require_once "detail_building/script-implement.php"; ?>
+    <?php require_once "detail_building_realdata/script.php"; ?>
 </head>
 <body>
 <div id="body-wrapper">
@@ -39,7 +39,7 @@ require_once "detail_building/init.php";
         </noscript>
 
         <!-- information category -->
-        <?php require_once "detail_building/part-infomation-category.php"; ?>
+        <?php require_once "detail_building_realdata/part-infomation-category.php"; ?>
 
         <div class="content-box column-left" style="width:100%">
             <div class="content-box-header">
@@ -47,19 +47,19 @@ require_once "detail_building/init.php";
             </div>
             <!-- detail category -->
             
-            <?php require_once "detail_building/part-detail-category-realdata.php"; ?>
+            <?php require_once "detail_building_realdata/part-detail-category.php"; ?>
            
             <!-- form add -->
-            <?php require_once "detail_building/part-add-category.php"; ?>
+            <?php require_once "detail_building_realdata/part-add-category.php"; ?>
         </div>
 
         <!-- detail material -->
-        <?php require_once "detail_building/part-detail-material-realdata.php"; ?>
+        <?php require_once "detail_building_realdata/part-detail-material.php"; ?>
       
     </div>
 </body>
 <!-- style -->
-<?php require_once "detail_building/style.php"; ?>
+<?php require_once "detail_building_realdata/style.php"; ?>
 <script type="text/javascript">
     data_material_category = <?php echo json_encode($data_material_category) ?>;
     list_id_material = <?php echo json_encode($list_id_material) ?>;

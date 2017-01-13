@@ -37,4 +37,13 @@
     #f-addcategory .chosen-container {
         width: 200px !important;
     }
+
+    table {
+        table-layout: fixed;
+    }
+    
+    th.date {width:120px;text-align:center;}
+    th.index {width:10px;text-align:center;}
+    th.num {width:100px;text-align:center;}
+    th.text {width:150px;text-align:center;}
 </style>

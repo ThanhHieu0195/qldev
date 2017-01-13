@@ -1,8 +1,8 @@
 <?php
 require_once '../part/common_start_page.php';
 // Authenticate
-do_authenticate(G_MANAGER_BUILDING_1, F_LIST_BUILDING_IMPLEMENT, TRUE);
-require_once "detail_building/init.php";
+// do_authenticate(G_MANAGER_BUILDING_1, F_LIST_BUILDING_IMPLEMENT, TRUE);
+require_once "detail_building_implement/init.php";
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -22,7 +22,7 @@ require_once "detail_building/init.php";
     <!--  -->
     <script type="text/javascript" src="../resources/scripts/utility/building/function-support.js"></script>
     <script type="text/javascript" language="javascript" src="../resources/datatable/js/jquery.dataTables.js"></script>
-    <?php require_once "detail_building/script-implement.php"; ?>
+    <?php require_once "detail_building_implement/script.php"; ?>
 </head>
 <body>
 <div id="body-wrapper">
@@ -39,7 +39,7 @@ require_once "detail_building/init.php";
         </noscript>
 
         <!-- information category -->
-        <?php require_once "detail_building/part-infomation-category.php"; ?>
+        <?php require_once "detail_building_implement/part-infomation-category.php"; ?>
 
         <div class="content-box column-left" style="width:100%">
             <div class="content-box-header">
@@ -47,14 +47,14 @@ require_once "detail_building/init.php";
             </div>
             <!-- detail category -->
             
-            <?php require_once "detail_building/part-detail-category-implement.php"; ?>
+            <?php require_once "detail_building_implement/part-detail-category.php"; ?>
            
             <!-- form add -->
-            <?php require_once "detail_building/part-add-category.php"; ?>
+            <?php require_once "detail_building_implement/part-add-category.php"; ?>
         </div>
 
         <!-- detail material -->
-        <?php require_once "detail_building/part-detail-material-implement.php"; ?>
+        <?php require_once "detail_building_implement/part-detail-material.php"; ?>
 
 
         <!-- change request -->
@@ -62,7 +62,7 @@ require_once "detail_building/init.php";
             <div class="content-box-header">
                 <h3>Các yêu cầu thay đổi</h3>
             </div>
-            <?php require_once "detail_building/part-detail-changerequest-implement.php"; ?>
+            <?php require_once "detail_building_implement/part-detail-changerequest.php"; ?>
         </div>
 
 
@@ -71,13 +71,13 @@ require_once "detail_building/init.php";
             <div class="content-box-header">
                 <h3>Kết quả kiểm soát</h3>
             </div>
-        <?php require_once "detail_building/part-detail-assessment-implement.php"; ?>
+        <?php require_once "detail_building_implement/part-detail-assessment.php"; ?>
         </div>
       
     </div>
 </body>
 <!-- style -->
-<?php require_once "detail_building/style.php"; ?>
+<?php require_once "detail_building_implement/style.php"; ?>
 <script type="text/javascript">
     data_material_category = <?php echo json_encode($data_material_category) ?>;
     list_id_material = <?php echo json_encode($list_id_material) ?>;

@@ -18,10 +18,10 @@
         }
 
         /*----------  Kiểm tra hợp lệ của ngày bắt đầy và dự đoán hoàn thành  ----------*/
-        function checkConditionDate() {
-            var date_start = $('input[name="date_start"]').val();
-            var date_expect_complete = $('input[name="date_expect_complete"]').val();
-            if (subDate(date_expect_complete, date_start) >= 0) {
+        function checkConditionDate(startdate, stopdate) {
+            var batdau = $('input[name="'+startdate+'"]').val();
+            var ketthuc = $('input[name="'+stopdate+'"]').val();
+            if (subDate(ketthuc, batdau) >= 0) {
                 return true;
             }
             alert('ISSUE: Ngày bắt đầu lớn hơn ngày hoàn thành');
@@ -29,10 +29,10 @@
         }
       
         /*-----------Date calculation ------------------------------*/
-        function dateCalculation(token, datex) {
-            var date2 = $('input[name="ngaybatdau'+token+'"]').datepicker('getDate', '+1d');
+        function dateCalculation(token, datex, startname, stopname) {
+            var date2 = $('input[name="' + startname +token+'"]').datepicker('getDate', '+1d');
             date2.setDate(date2.getDate()+parseInt(datex));
-            $('input[name="ngaydukienketthuc'+token+'"]').datepicker('setDate', date2);
+            $('input[name="' + stopname +token+'"]').datepicker('setDate', date2);
             $('input[name="button-category'+token+'"]').show();
         }
    
@@ -57,68 +57,88 @@
         }
 
         /*----------  Tính dự đoán chi phí tự động  ----------*/
-        function calautoExpectMoney(token) {
-            var num = $('input[name="khoiluongdutoan'+token+'"]').val();
-            var price_expect = $('input[name="khoiluongdutoan'+token+'"]').attr('price_expect');
-            var price = parseInt(num)*parseInt(price_expect);
+        function calautoExpectMoney(token, source, dest) {
+            var num = $('input[name="'+source+token+'"]').val();
+            var dongia = $('input[name="'+source+token+'"]').attr('dongia');
+            var price = parseInt(num)*parseInt(dongia);
             if (price) {
-                $('input[name="dudoanchiphibandau'+token+'"]').val( number2string(price) );
+                $('input[name="'+dest+token+'"]').val( number2string(price) );
             } else {
-                $('input[name="dudoanchiphibandau'+token+'"]').val(0);
+                $('input[name="'+dest+token+'"]').val(0);
             }
             showUpdateButton(token);
         }
 
         function approvedCongTrinh(id_building) {
-            var path = "../ajaxserver/update_detail_building_server.php";
-            var data_update_category = {
-                "method":'update-approve-congtrinh',
-                "id_building": id_building
-            };
-            //console.log(data_update_category);
-            $.post(path, data_update_category, function(data, textStatus, xhr) {
-                console.log(data);
-                if (data=="1") {
-                    location.reload();
-                } else {
-                    alert('Khong the duyet cong trinh');
-                }
-            });
+            if (confirm('Bạn đã hoàn tất cập nhật dự toán ?')) {
+		var path = "../ajaxserver/update_detail_building_server.php";
+		var data_update_category = {
+		    "method":'update-approve-congtrinh',
+		    "id_building": id_building
+		};
+		$.post(path, data_update_category, function(data, textStatus, xhr) {
+		    if (data=="1") {
+                        window.location = "../building/list_building.php";
+		    } else {
+			alert('Có lỗi xảy ra trong quá trình cập nhật');
+		    }
+		});
+            }
         }
 
         function updateCategory(token) {
-            var columns = ['ngaybatdau', 'ngaydukienketthuc', 'ngayketthuc', 'iddoithicong', 'dongiathicong', 'dongiadutoan', 'khoiluongdutoan', 'khoiluongthucte', 'khoiluongphatsinh', 'dudoanchiphibandau', 'chiphithucte', 'tiendachi', 'trangthai', 'ghichu', 'danhgiahoanthien', 'khoiluongthicong'];
-            var date_start = $('inpt[name="ngaybatdau'+token+'"]').val();
-            var date_expect_complete = $('input[name="ngaydukienketthuc'+token+'"]').val();
-            if (subDate(date_expect_complete, date_start) < 0) {
+            var id_category = token;
+            var columns = ['ngaydukienbatdau', 'ngaydukienketthuc', 'khoiluongdutoan', 'ghichu'];
+            var conditions = {'idcongtrinh':id_building,'idhangmuc':token};
+            var ngaydukienbatdau = $('inpt[name="ngaydukienbatdau'+token+'"]').val();
+            var ngaydukienketthuc = $('input[name="ngaydukienketthuc'+token+'"]').val();
+            if (subDate(ngaydukienketthuc, ngaydukienbatdau) < 0) {
                 alert('Ngày bắt đầu và kết thúc không hợp lệ');
                 return;
             }
             var path = "../ajaxserver/update_detail_building_server.php";
-            var id_category = token;
-            var test = {'id_building':id_building,'id_category':token};
+            var test = {};
             for (var i = 0, len = columns.length; i < len; i++) {
                 col = columns[i];
                 tmp = $('input[name="'+col+token+'"]').val();
                 if (tmp !== undefined) {
-                    if (col=='dudoanchiphibandau' || col=='chiphithucte' || col=='tiendachi') {
-                        tmp = format_num(tmp);
+                    if ((col=='khoiluongdutoan')&&(tmp==0)) {
+                        alert('Khối lượng thi công phải lớn hơn 0!');
+                        return;
                     }
                     test[col] = tmp;
                 }
             }
-            parm = {'id_building':id_building};
 
             var data_update_category = {
                 "method":'update-category', 
-                "params": test
+                "params": test,
+                "conditions": conditions 
             };
 
             $.post(path, data_update_category, function(data, textStatus, xhr) {
                     var data_update_expect_money = {"method":"update-expect-money", "token": id_building};
-                    updateExpectMoney(path, data_update_expect_money, token);
+                    updateExpectMoney(path, data_update_expect_money, true, token);
                    
             });
+        }
+
+
+        function deleteCategory(token) {
+            if (confirm('Bạn có chắc là muốn xóa hạng mục này ?')) {
+                var conditions = {"idcongtrinh": id_building, "idhangmuc": token};
+                var path = "../ajaxserver/update_detail_building_server.php";
+		var data_delete_category = {
+		    "method":'delete-category',
+		    "conditions": conditions
+		};
+
+		$.post(path, data_delete_category, function(data, textStatus, xhr) {
+			var data_update_expect_money = {"method":"update-expect-money", "token": id_building};
+			updateExpectMoney(path, data_update_expect_money, true, token);
+
+		});
+             }
         }
 
         function updateExpectMoney(path, data_update_expect_money, reload = false, token) {
@@ -129,7 +149,7 @@
                     json = jQuery.parseJSON(data);
                     if (json['money_expect'] != -1) {
                         var money_expect = json['money_expect'];
-                        $('#cost').html(" Giá dự đoán: " + number2string(money_expect));
+                        $('#cost').html("Giá dự toán: " + number2string(money_expect));
                         hideUpdateButton(token);
                     }
                 }
@@ -140,7 +160,7 @@
             var parent = String.format('table[idcategory={0}] tr[idrow={1}]', token, idrow);
             var id_material_category = $(parent + " .name_material_category").val();
             var pricehight = data_material_category[token][id_material_category];
-            var num = $(parent + " .expect_num").val();
+            var num = $(parent + " .soluongdutoan").val();
             pricehight = parseFloat(pricehight);
             num = parseInt(format_num(num));
             if (num) {
@@ -157,8 +177,8 @@
             var id_material_category = $(parent + " .name_material_category").val();
             var pricehight = data_material_category[token][id_material_category];
             pricehight = parseFloat(pricehight);
-            $(parent + " .auto_expect_money_unit").html(number2string(pricehight));
-            $(parent + " .expect_num").attr("readonly", false); 
+            $(parent + " .dongiavattu").html(number2string(pricehight));
+            $(parent + " .soluongdutoan").attr("readonly", false); 
         }
 
         function addRowHtml(id_category) {
@@ -212,19 +232,16 @@
 
         function updateRowMaterial(id_category, id_row) {
             var data_material_category = {"method":"update-detail-material-category",
-                                        "params":{}};
+                                        "params":{},
+                                        "conditions":{}};
             var path = "../ajaxserver/update_detail_building_server.php";
-
             var id_material = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('select').val();
-            var expect_num = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('.expect_num').val();
-            var expect_cost = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('.auto_expect_money').html();
-            expect_cost = format_num(expect_cost);
-
-            var obj = {"id":id_row,"id_building":id_building, "id_category":id_category, "id_material":id_material};
-            obj["soluongdutoan"] = expect_num;
-            obj["giadutoan"] = expect_cost;
-            data_material_category['params'] = obj;
-            if (obj.id_building != "" && obj.id_category != "" && obj.id_material!= "") {
+            var soluongdutoan = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('.soluongdutoan').val();
+            var conditions = {"id":id_row,"idcongtrinh":id_building, "idhangmuc":id_category, "idvattu":id_material};
+            var params = {"soluongdutoan":soluongdutoan};
+            data_material_category['params'] = params;
+            data_material_category['conditions'] = conditions;
+            if (id_building != "" && id_category != "" && id_material!= "") {
                 $.post(path, data_material_category, function(data, textStatus, xhr) {
                     // cập nhật chi tiết hạng mục
                     json = jQuery.parseJSON(data);
@@ -244,22 +261,18 @@
             var data_material_category = {"method":"insert-detail-material-category",
                                         "params":{}};
             var path = "../ajaxserver/update_detail_building_server.php";
-
             var id_material = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('select').val();
-            var expect_num = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('.expect_num').val();
-            var expect_cost = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('.auto_expect_money').html();
-            expect_cost = format_num(expect_cost);
-
-            var obj = {"id":id_row,"id_building":id_building, "id_category":id_category, "id_material":id_material};
-            obj["soluongdutoan"] = expect_num;
-            obj["giadutoan"] = expect_cost;
-            if (expect_num==0) {
+            var soluongdutoan = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('.soluongdutoan').val();
+            var dongiavattu = $('table[idcategory = '+id_category+'] tbody tr[idrow='+id_row+']').find('.dongiavattu').html();
+            dongiavattu = format_num(dongiavattu);
+            if (soluongdutoan==0) {
                 alert('Số lượng không hợp lệ');
                 return;
             }
-            data_material_category['params'] = obj;
-
-            if (obj.id_building != "" && obj.id_category != "" && obj.id_material!= "") {
+            var params = [id_row, id_building, id_category, id_material, dongiavattu, soluongdutoan,'0', '0', '', '', '', '', ''];
+            data_material_category['params'] = params;
+             
+            if (id_building != "" && id_category != "" && id_material!= "") {
                 $.post(path, data_material_category, function(data, textStatus, xhr) {
                     json = jQuery.parseJSON(data);
                     if ( json.result == true ) {
@@ -285,14 +298,14 @@
 
         $(document).ready(function() {
             var status = <?php echo json_encode($status); ?>;
-            if (status>=1) {
-                $('.approved-hide').hide();
-            }
+            //if (status>=1) {
+            //    $('.approved-hide').hide();
+            //}
             /*----------  Thiết lập datepicker  ----------*/
-            $('input[name="date_start"]').datepicker({ 
+            $('input[name="ngaykhoicong"]').datepicker({ 
                 dateFormat: 'yy-mm-dd',
                 onSelect: function(dateupdate) {
-                    if (checkConditionDate()) {
+                    if (checkConditionDate("ngaykhoicong","ngaydukienhoanthanh")) {
                         var path = "../ajaxserver/update_detail_building_server.php?method={0}&token={1}&dateupdate={2}";
                         path = String.format(path, 'update-date-start', id_building, dateupdate);
                         $.get(path, function(data) {
@@ -301,11 +314,11 @@
                     }
                 }
              }); 
-            $('input[name="date_start"]').datepicker('setDate', '<?php echo $data_building->ngaykhoicong; ?>');
-            $('input[name="date_expect_complete"]').datepicker({ 
+            $('input[name="ngaykhoicong"]').datepicker('setDate', '<?php echo $data_building->ngaykhoicong; ?>');
+            $('input[name="ngaydukienhoanthanh"]').datepicker({ 
                 dateFormat: 'yy-mm-dd',
                 onSelect: function(dateupdate) {
-                    if (checkConditionDate()) {
+                    if (checkConditionDate("ngaykhoicong","ngaydukienhoanthanh")) {
                         var path = "../ajaxserver/update_detail_building_server.php?method={0}&token={1}&dateupdate={2}";
                         path = String.format(path, 'update-date-expect-complete', id_building, dateupdate);
                         $.get(path, function(data) {
@@ -314,10 +327,10 @@
                     }
                 }
              }); 
-            $('input[name="date_expect_complete"]').datepicker('setDate', '<?php echo $data_building->ngaydukienhoanthanh; ?>');
+            $('input[name="ngaydukienhoanthanh"]').datepicker('setDate', '<?php echo $data_building->ngaydukienhoanthanh; ?>');
 
-            $('.ngaybatdau').datepicker();
-            $('.ngaydukienketthuc').datepicker();
+            $('.ngaypicker').datepicker();
+
             // $('#f-addcategory').bPopup();
             $('input[name="show-form-category"]').click(function(event) {
                 $('input[name="show-form-category"]').hide();

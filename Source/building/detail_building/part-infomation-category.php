@@ -14,7 +14,7 @@
         <!-- <label id="sts_notifi"><span></span></label> -->
 </div>
 <div style="padding: 10px 0px;">
-     Ngày khởi công dự kiến: <input name="date_start" class="text-input small-input" style="width: 150px !important;background: transparent;" type="text" readonly="readonly" style="background: #f0f0f0" />
-     Ngày hoàn thành dự kiến: <input name="date_expect_complete" class="text-input small-input" style="width: 150px !important; background: transparent;" type="text" readonly="readonly" />
+     Ngày khởi công dự kiến: <input name="ngaykhoicong" class="text-input small-input" style="width: 150px !important;background: transparent;" type="text" readonly="readonly" style="background: #f0f0f0" />
+     Ngày hoàn thành dự kiến: <input name="ngaydukienhoanthanh" class="text-input small-input" style="width: 150px !important; background: transparent;" type="text" readonly="readonly" />
      Đổi trạng thái sang: <input id='approved' type='button' onClick="approvedCongTrinh('<?php echo $data_building->id ?>')" value='<?php echo $upper ?>' style='padding:3px 8px'/>
 </div>

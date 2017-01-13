@@ -80,7 +80,7 @@ do_authenticate(G_MANAGER_BUILDING, F_LIST_BUILDING_VATTU, TRUE);
                                                     <th>Khối lượng thi công</th>
                                                     <th>Tiền thi công</th>
                                                     <th>Đội thầu</th>
-                                                    <th>Chọn đội thầu/Lịch chi tiền</th>
+                                                    <th>Chọn đội thầu</th>
                 
                                                 </tr>
                                             </thead>

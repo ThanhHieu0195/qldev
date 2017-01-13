@@ -34,7 +34,10 @@ if ( isset($_POST['add']) ) {
         $d = 0;
         for ($i=0; $i < count($list_id_category); $i++) { 
             $id_category = $list_id_category[$i];
-            $detail_category_building->insert($id_building, $id_category);
+            $params = array($id_building, $id_category,'','','','','','','','','','','','','');
+            if($detail_category_building->insert($params)) {
+                $detail_category_building->updatedongia($id_building, $id_category);
+            }
             $d++;
         }
         if ($d == count($list_id_category)) {
