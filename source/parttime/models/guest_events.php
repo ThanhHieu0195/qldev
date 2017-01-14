@@ -1,0 +1,304 @@
+<?php
+require_once '../entities/guest_events_entity.php';
+require_once '../models/database.php';
+class guest_events extends database {
+    public function insert(guest_events_entity $item) {
+        $sql = "INSERT INTO `guest_events` 
+                    (`uid`, `guest_id`, `event_date`, 
+                    `note`, `is_event`, `enable`
+                    )
+                VALUES
+                    ('{$item->uid}', '{$item->guest_id}', '{$item->event_date}', 
+                    '{$item->note}', '{$item->is_event}', '{$item->enable}'
+                    );";
+        
+        if (! $this->is_existing_schedule($item->guest_id,$item->event_date)) {
+            $this->setQuery ( $sql );
+            $result = $this->query ();
+            $this->disconnect ();
+            return $result;
+        } 
+        
+        return TRUE;
+    }
+    public function update(guest_events_entity $item) {
+        $sql = "UPDATE `guest_events` 
+                SET                    
+                    `guest_id`   = '{$item->guest_id}', 
+                    `event_date` = '{$item->event_date}', 
+                    `note`       = '{$item->note}', 
+                    `is_event`   = '{$item->is_event}', 
+                    `enable`     = '{$item->enable}'
+                WHERE `uid` = '{$item->uid}' ";
+        
+        $this->setQuery ( $sql );
+        $result = $this->query ();
+        $this->disconnect ();
+        
+        return $result;
+    }
+	   public function update_customer_online($customerid) {
+		 $currentdate =  date('Y/m/d h:i:s', time());
+        $sql = "UPDATE `guest_events` 
+                SET                            
+                    `event_date` = '{$currentdate}'             
+                WHERE `guest_id` = '{$customerid}' ";
+        
+        $this->setQuery ( $sql );
+        $result = $this->query ();
+        $this->disconnect ();
+        
+        return $result;
+    }
+    public function delete_by_guest($guest_id, $all_event = FALSE) {
+        $sql = "DELETE FROM `guest_events` WHERE `guest_id` = '{$guest_id}' ";
+        if (! $all_event) {
+            $is_event = BIT_TRUE;
+            $sql .= " AND `is_event` = '{$is_event}'";
+        }
+        
+        $this->setQuery ( $sql );
+        $result = $this->query ();
+        $this->disconnect ();
+        
+        return $result;
+    }
+    public function list_by_guest($guest_id, $all_event = FALSE) {
+        $sql = "SELECT * 
+                FROM `guest_events`
+                WHERE `guest_id` = '{$guest_id}' ";
+        if (! $all_event) {
+            $is_event = BIT_TRUE;
+            $sql .= " AND `is_event` = '{$is_event}'";
+        }
+        
+        $this->setQuery ( $sql );
+        $result = $this->loadAllRow ();
+        $this->disconnect ();
+        
+        // Initial value
+        $list = array ();
+        
+        if (is_array ( $result )) {
+            foreach ( $result as $row ) {
+                $item = new guest_events_entity ();
+                $item->assign ( $row );
+                
+                $list [] = $item;
+            }
+        }
+        
+        return $list;
+    }
+    public function list_by_time($start, $end, $guest_id = '', $all = FALSE) {
+        $where = " (`event_date` BETWEEN '{$start}' AND '{$end}') ";
+        if (! empty ( $guest_id )) {
+            $where .= " AND (`guest_id` = '{$guest_id}') ";
+        }
+        if (! $all) {
+            $enable = BIT_TRUE;
+            $sql .= " AND `enable` = '{$enable}'";
+        }
+        
+        $sql = "SELECT * FROM `guest_events` WHERE $where ";
+        $this->setQuery ( $sql );
+        $result = $this->loadAllRow ();
+        $this->disconnect ();
+        
+        // Initial value
+        $list = array ();
+        
+        if (is_array ( $result )) {
+            foreach ( $result as $row ) {
+                $item = new guest_events_entity ();
+                $item->assign ( $row );
+                
+                $list [] = $item;
+            }
+        }
+        
+        return $list;
+    }
+    public function is_existing_schedule($guest_id, $date) {
+        $sql = "SELECT `uid` FROM `guest_events` WHERE `guest_id` = '{$guest_id}' AND `event_date` = '{$date}'";
+        $this->setQuery ( $sql );
+        $result = $this->loadAllRow ();
+        $this->disconnect ();
+        
+        return ((is_array ( $result ) && count ( $result ) > 0));
+    }
+
+    public function schedule_from_date_history($guest_id, $date) {
+        $sql = "select g.uid as uid from guest_events as g left join guest_development_history as h on h.guest_id = g.guest_id and date(h.created_date) between g.event_date and g.event_date where ((h.created_date is null) or (h.created_date is not null and h.is_history=0)) and g.event_date < '".$date."' and g.guest_id=".$guest_id;
+        //error_log ("Add new" . $sql, 3, '/var/log/phpdebug.log');
+        $this->setQuery ( $sql );
+        $result = $this->loadAllRow ();
+        $this->disconnect ();
+        if ((is_array ($result)) && (count ( $result ) > 0)) {
+            return $result[0];
+        }
+        return NULL;
+    }
+
+
+    public function schedule_from_date($guest_id, $date) {
+        $sql = "SELECT `uid` FROM `guest_events` WHERE `guest_id` = '{$guest_id}' AND `event_date` > '{$date}'";
+        $this->setQuery ( $sql );
+        $result = $this->loadAllRow ();
+        $this->disconnect ();
+        if ((is_array ($result)) && (count ( $result ) > 0)) {
+            return $result[0];
+        }
+        return NULL;
+    }
+
+
+    public function statistic_amount_by_time($start, $end, $employee_id = '', $all = FALSE) {
+        $tmp = "";
+        
+        // Get enabled events
+        if (! $all) {
+            $enable = BIT_TRUE;
+            $tmp .= " AND e.enable = '{$enable}' ";
+        }
+        // Get events by employee
+        if (! empty ( $employee_id )) {
+            $tmp .= " AND r.employee_id = '{$employee_id}' ";
+        }
+        // Get events of guests that is developing
+        $development = GUEST_DEVELOPMENT_ONGOING;
+        //$tmp .= " AND k.development = '{$development}' ";
+        
+        $sql = "SELECT e.event_date, e.guest_id, r.employee_id, k.hoten, k.development, n.hoten AS tennv
+                FROM guest_events e INNER JOIN guest_responsibility r ON e.guest_id = r.guest_id
+                                    INNER JOIN khach k ON e.guest_id = k.makhach
+                                    INNER JOIN nhanvien n ON r.employee_id = n.manv
+                WHERE (e.event_date BETWEEN '{$start}' AND '{$end}') $tmp
+                GROUP BY e.guest_id, e.event_date
+                ORDER BY e.event_date";
+        //error_log ($sql, 3, '/var/log/phpdebug.log');
+        
+        $this->setQuery ( $sql );
+        $result = $this->loadAllRow ();
+        $this->disconnect ();
+        
+        if (is_array ( $result ) && count ( $result ) > 0) {
+            $arr = array ();
+            
+            foreach ( $result as $r ) {
+                // Check the date
+                $date = $r ['event_date'];
+                if (isset ( $arr [$date] )) {
+                    // Do nothing
+                } else {
+                    $arr [$date] = array (
+                            'event_date' => $date,
+                            'employees' => array () 
+                    );
+                }
+                
+                // Check the employee
+                $employee = $r ['employee_id'];
+                if (isset ( $arr [$date] ['employees'] [$employee] )) {
+                } else {
+                    $arr [$date] ['employees'] [$employee] = array (
+                            'id' => $employee,
+                            'name' => $r ['tennv'],
+                            'guests' => array () 
+                    );
+                }
+                
+                // Check the guest
+                $guest = $r ['guest_id'];
+                if (! isset ( $arr [$date] ['employees'] [$employee] ['guests'] [$guest] )) {
+                    $arr [$date] ['employees'] [$employee] ['guests'] [] = $guest;
+                }
+            }
+            
+            return $arr;
+        }
+        
+        return $result;
+    }
+    public function count_need_contacting($employee_id, $start, $end) {
+        $enable = BIT_TRUE;
+        $development = GUEST_DEVELOPMENT_ONGOING;
+        $sql = "SELECT COUNT(DISTINCT(e.guest_id)) AS num
+                FROM guest_events e INNER JOIN guest_responsibility r ON e.guest_id = r.guest_id
+                                    INNER JOIN khach k ON e.guest_id = k.makhach
+                WHERE e.enable = '{$enable}' 
+                      AND (DATE(e.event_date) BETWEEN '{$start}' AND '{$end}')
+                      AND r.employee_id = '{$employee_id}'
+                      /* AND k.development = '{$development}' */ 
+                ";
+        
+        $this->setQuery ( $sql );
+        $result = mysql_fetch_assoc ( $this->query () );
+        $this->disconnect ();
+        
+        if (is_array ( $result )) {
+            return $result ['num'];
+        }
+        return 0;
+    }
+
+    // Ngay hen lien he tiep theo voi khach hang (lay theo ngay hien tai)
+    public function next_schedule($guest_id) {
+        $is_event = BIT_FALSE;
+        $enable = BIT_TRUE;
+        $sql = "SELECT *
+                FROM guest_events 
+                WHERE guest_id = '{$guest_id}' and  is_event = {$is_event} and enable = {$enable}
+                ORDER BY event_date DESC";
+        //debug($sql);
+
+        $this->setQuery ( $sql );
+        $result = $this->query ();
+        $array = mysql_fetch_assoc ( $result );
+        $this->disconnect ();
+        
+        if (is_array ( $array )) {
+            $item = new guest_events_entity ();
+            $item->assign ( $array );
+            
+            return $item;
+        }
+        return NULL;
+    }
+
+    public function detail($event_id) {
+        $is_event = BIT_FALSE;
+        $enable = BIT_TRUE;
+        $sql = "SELECT *
+                FROM guest_events 
+                WHERE uid = '{$event_id}' ";
+        //debug($sql);
+
+        $this->setQuery ( $sql );
+        $result = $this->query ();
+        $array = mysql_fetch_assoc ( $result );
+        $this->disconnect ();
+        
+        if (is_array ( $array )) {
+            $item = new guest_events_entity ();
+            $item->assign ( $array );
+            
+            return $item;
+        }
+        return NULL;
+    }
+
+    public function delete(guest_events_entity $item) {
+        $sql = "DELETE FROM `guest_events`
+                WHERE `uid` = '{$item->uid}' ";
+
+        $this->setQuery ( $sql );
+        $result = $this->query ();
+        $this->disconnect ();
+
+        return $result;
+    }
+
+}
+
+/* End of file */

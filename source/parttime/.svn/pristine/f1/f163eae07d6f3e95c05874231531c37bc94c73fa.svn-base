@@ -1,0 +1,68 @@
+"Cải tiến hệ thống hỗ trợ bán hàng theo module
+Thêm tab menu mới: Hàng sản xuất theo module
+- Cập nhật table tranh, thêm các cột (cao, giavon,loai) như trong file script
+- Sửa trang items/add.php, thêm các trường mới này (loai: select (sản phẩm hoặc lắp ghép))
+- Sửa trang items/autoupload.php cho phép nhập hàng có thêm các column (cao, giavon,loai)
+
+- Thêm trang (model, GUI) cho phép add, delete, update “Loại chi tiết sản phẩm” (table loaichitietsanpham)
+- Thêm trang (model, GUI) cho phép add, delete, update “Chi tiết sản phẩm” (table chitietsanpham). 
+
+o Mã chi tiết: pattern (A-Za-z0-9_)
+o Mã loại: select box
+- Thêm trang (model, GUI) cho phép add, delete, update “Sản phẩm module” (table chitietsanphammapping), gồm các trang
+o Danh sách sản phẩm Module: Liệt kê các sản phẩm trong table tranh thuộc loại Lắp ghép (masotranh, tentranh, maloai, dai,rong,cao,mausac,hinhanh) và cột Chi tiết để link vào trang Sản phẩm module
+o Trang Sản phẩm module:  gồm label các thuộc tính (masotranh, tentranh, maloai, dai,rong,cao,mausac,hinhanh), select  chọn loại chi tiết, sau khi chọn loại chi tiết thì sẽ append select để chọn chi tiết sản phẩm và text box để input số lượng chi tiết. Nút “thêm” sau khi nhập đủ thông tin, khi click vào nút này thì nhập vào table chitietsanphammapping, đồng thời append 1 row vào trang này
+o Ví dụ: Sản phẩm cái bàn, select chọn Loại chi tiết tên Chân bàn, select chọn mã chân cho cái bàn này, nhập số lượng là 4
+- Thêm trang cho phép upload từ Excel để nhập vào (table chitietsanphammapping), có kiểm tra các trường tồn tại trong lúc nhập, báo cáo những hàng nhập chưa đúng
+- Thêm trang cho phép nhập chi tiết sản phẩm vào kho từ file excel (table tonkhosanxuat): gồm các trường: machitiet, maloai, mota, hinhanh, mausac, dai, rong, cao, makho, soluong. Nếu machitiet mới, thì thêm vào table chitietsanpham và table tonkhosanxuat, nếu machitiet đã có thì chỉ cần update tonkhosanxuat.
+- Cập nhật trang view/store.php, thêm cột “loại: sản phẩm hoặc lắp ghép”, khi click bán hàng, đối với sản phẩm lắp ghép thì không cần kiểm tra tồn kho.
+Bán hàng:
+- Cập nhật trang view/pay.php:
+1. Thêm vào phía dưới Danh sách hàng đặt mua table thể hiện các chi tiết đặt mua của sản phẩm lắp ghép: gồm các cột: mã chi tiết, tên chi tiết, số lượng
+2. khi click vào nút lưu hóa đơn thì cần làm thêm, nếu là sản phẩm lắp ghép:
+o Không trừ sản phẩm trong table tonkho
+o Dựa vào số lượng sản phẩm – chitietsanphammapping để tính ra các chi tiết sản phẩm (ví dụ mua 1 cái bàn sẽ chuyển thành 1 mặt bàn và 4 chân bàn + 20 ốc vít)
+o Lưu các chi tiết sản phẩm này vào table hangkhachdat theo madonhang, masotranh, soluong, trangthai=0
+- Cập nhật trang orders/orderdetail.php cho dòng sản phẩm lắp ghép:
+1. Thêm vào phía dưới Danh sách hàng đặt mua table “Danh sách chi tiết” thể hiện các chi tiết đặt mua của sản phẩm lắp ghép: gồm các cột: mã chi tiết, tên chi tiết, số lượng
+2. Đối với sản phẩm lắp ghép, nút giao hàng và trả hàng nằm ở table “Danh sách chi tiết”. Các nút này chỉ hiện lên sau khi đơn hàng đã được approve
+3. Khi click vào nút trả hàng, popup confirm, sau đó chuyển trangthai trong table hangkhachdat qua 3 (Hủy). 
+4. Khi click vào nút giao hàng, query trong database tonkhosanxuat các kho hàng có đủ số lượng chi tiết cần giao, popup select cho chọn Kho hàng để giao trong số các kho có chi tiết này. Sau khi giao từ kho nào thì trừ số lượng tương ứng trong table tonkhosanxuat và chuyển trạng thái trong hangkhachdat qua 2: đã giao
+5. Khi giao đủ hết số lượng chi tiết và giao đủ sản phẩm thì chuyển đơn hàng qua đã giao như bình thường.
+"
+
+ALTER TABLE `tranh` ADD `cao` VARCHAR(10) NOT NULL AFTER `maloai`;
+ALTER TABLE `tranh` ADD `giavon` FLOAT NOT NULL AFTER `rong`;
+ALTER TABLE `tranh` ADD `loai` int(11) NOT NULL AFTER `hoavan`;
+
+ALTER TABLE `upload_detail` ADD `cao` VARCHAR(10) NOT NULL AFTER `maloai`;
+ALTER TABLE `upload_detail` ADD `giavon` FLOAT NOT NULL AFTER `rong`;
+ALTER TABLE `upload_detail` ADD `loai` int(11) NOT NULL AFTER `hoavan`;
+
+
+INSERT INTO `khohang` (`makho`, `tenkho`, `diachi`, `dienthoai`) VALUES ('-2', 'san pham lap rap', NULL, NULL);
+
+//
+
+INSERT INTO `account_function_group` (`group_id`, `group_name`, `note`, `no`) VALUES ('manager_product_module', 'quản lý sản phẩm module', 'quản lý sản phẩm module', '1');
+INSERT INTO `account_function` (`function_id`, `group_id`, `function_name`, `note`, `enable`) VALUES ('danhsachsanphammodule', 'manager_product_module', 'danh sách sản phẩm module', 'danh sách sản phẩm module', '1');
+INSERT INTO `account_function_of_role` (`role_id`, `function_id`) VALUES ('admin', 'danhsachsanphammodule');
+
+
+INSERT INTO `account_function` (`function_id`, `group_id`, `function_name`, `note`, `enable`) VALUES ('autouploadchitietsanphammapping', 'manager_product_module', 'danh sách sản phẩm module', 'danh sách sản phẩm module', '1');
+INSERT INTO `account_function_of_role` (`role_id`, `function_id`) VALUES ('admin', 'autouploadchitietsanphammapping');
+
+
+INSERT INTO `account_function` (`function_id`, `group_id`, `function_name`, `note`, `enable`) VALUES ('autoupload_tonkhosanxuat', 'manager_product_module', 'danh sách sản phẩm module', 'danh sách sản phẩm module', '1');
+INSERT INTO `account_function_of_role` (`role_id`, `function_id`) VALUES ('admin', 'autoupload_tonkhosanxuat');
+
+
+
+
+INSERT INTO `account_function` (`function_id`, `group_id`, `function_name`, `note`, `enable`) VALUES ('module_loaichitietsanpham', 'manager_product_module', 'danh sách sản phẩm module', 'danh sách sản phẩm module', '1');
+INSERT INTO `account_function_of_role` (`role_id`, `function_id`) VALUES ('admin', 'module_loaichitietsanpham');
+
+INSERT INTO `account_function` (`function_id`, `group_id`, `function_name`, `note`, `enable`) VALUES ('module_chitietsanpham', 'manager_product_module', 'danh sách sản phẩm module', 'danh sách sản phẩm module', '1');
+INSERT INTO `account_function_of_role` (`role_id`, `function_id`) VALUES ('admin', 'module_chitietsanpham');
+
+

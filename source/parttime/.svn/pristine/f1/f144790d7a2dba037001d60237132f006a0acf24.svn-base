@@ -1,0 +1,11 @@
+<?php 
+    $title = "Chi tiết sản phẩm";
+ ?>
+
+<!-- part-form-create.php -->
+ <?php 
+    $labels = array('Mã chi tiết', 'Mã loại', 'Mô tả', 'Hình ảnh', 'Màu sắc', 'Dài', 'Rộng', 'Cao', 'Tổng tồn', 'Chờ giao');
+    $btn_add = array('tag' => 'input', 'class' => 'button', 'onclick' => 'show_form_add();', 'type' => 'button', 'value' => 'Add');
+    $model = new loaichitietsanpham();
+    $data = $model->getAll();
+ ?>

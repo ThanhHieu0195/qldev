@@ -1,0 +1,143 @@
+-- Created by Vertabelo (http://vertabelo.com)
+-- Last modification date: 2016-11-16 09:12:09.272
+
+-- Table: danhsachcongtrinh
+CREATE TABLE danhsachcongtrinh (
+    id int NOT NULL AUTO_INCREMENT,
+    tencongtrinh varchar(20) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    diachi varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    makhach int NOT NULL,
+    trangthai int NOT NULL,
+    ngaykhoicong date NOT NULL,
+    ngaydukienhoanthanh date NOT NULL,
+    giatridutoan double NOT NULL,
+    tiendathu double NOT NULL,
+    tiendachi double NOT NULL,
+    CONSTRAINT danhsachcongtrinh_pk PRIMARY KEY (id)
+);
+
+-- tables
+-- Table: chitiethangmuccongtrinh
+CREATE TABLE chitiethangmuccongtrinh (
+    idcongtrinh int NOT NULL,
+    idhangmuc int NOT NULL,
+    ngaybatdau date NOT NULL,
+    ngaydukienketthuc date NOT NULL,
+    ngayketthuc date NOT NULL,
+    iddoithicong int NOT NULL,
+    dongiathicong double NOT NULL,
+    dutoanchiphibandau double NOT NULL,
+    chiphithucte double NOT NULL,
+    tiendachi double NOT NULL,
+    trangthai int NOT NULL,
+    danhgiahoanthien varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    CONSTRAINT chitiethangmuccongtrinh_pk PRIMARY KEY (idcongtrinh,idhangmuc)
+);
+
+-- Table: chitietvattucongtrinh
+CREATE TABLE chitietvattucongtrinh (
+    idcongtrinh int NOT NULL,
+    idhangmuc int NOT NULL,
+    idvattu int NOT NULL,
+    soluongdutoan int NOT NULL,
+    soluongthucte int NOT NULL,
+    giadutoan double NOT NULL,
+    giathucte double NOT NULL,
+    idnhacungcap int NOT NULL,
+    trangthai int NOT NULL,
+    ghichu varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    CONSTRAINT chitietvattucongtrinh_pk PRIMARY KEY (idcongtrinh,idhangmuc,idvattu)
+);
+
+-- Table: congviechangmucthicong
+CREATE TABLE congviechangmucthicong (
+    id int NOT NULL AUTO_INCREMENT,
+    idhangmuc int NOT NULL,
+    motacongviec varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    tieuchihoanthanh varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    CONSTRAINT congviechangmucthicong_pk PRIMARY KEY (id)
+);
+
+-- Table: danhsachdoithicong
+CREATE TABLE danhsachdoithicong (
+    id int NOT NULL AUTO_INCREMENT,
+    tendoi varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    diachi varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    sodienthoai varchar(255) NOT NULL,
+    idhangmuc int NOT NULL,
+    madoi varchar(20) NOT NULL,
+    dongia double NOT NULL,
+    nanglucdapung int,
+    CONSTRAINT danhsachdoithicong_pk PRIMARY KEY (id)
+);
+
+-- Table: danhsachnhacungcap
+CREATE TABLE danhsachnhacungcap (
+    id int NOT NULL AUTO_INCREMENT,
+    ten varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    diachi varchar(255) NOT NULL,
+    dienthoai varchar(255) NOT NULL,
+    idhangmuc int NOT NULL,
+    manhacc varchar(20) NOT NULL,
+    CONSTRAINT danhsachnhacungcap_pk PRIMARY KEY (id)
+);
+
+-- Table: hangmucthicong
+CREATE TABLE hangmucthicong (
+    id int NOT NULL AUTO_INCREMENT,
+    tenhangmuc varchar(255) NOT NULL,
+    mota varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    songaythicong int,
+    dongiathdutoan double NOT NULL,
+    CONSTRAINT hangmucthicong_pk PRIMARY KEY (id)
+);
+
+-- Table: lichchitiendoithicong
+CREATE TABLE lichchitiendoithicong (
+    idcongtrinh int NOT NULL,
+    idhangmuc int NOT NULL,
+    iddoithicong int NOT NULL,
+    ngaychi date NOT NULL,
+    sotien double NOT NULL,
+    noidungchi varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    CONSTRAINT lichchitiendoithicong_pk PRIMARY KEY (idcongtrinh,idhangmuc,iddoithicong)
+);
+
+-- Table: trangthaicongtrinh
+CREATE TABLE trangthaicongtrinh (
+    id int NOT NULL AUTO_INCREMENT,
+    mota varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    CONSTRAINT trangthaicongtrinh_pk PRIMARY KEY (id)
+);
+
+-- Table: trangthaihangmuc
+CREATE TABLE trangthaihangmuc (
+    id int NOT NULL AUTO_INCREMENT,
+    mota varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    CONSTRAINT trangthaihangmuc_pk PRIMARY KEY (id)
+);
+
+-- Table: vattuhangmucthicong
+CREATE TABLE vattuhangmucthicong (
+    id int NOT NULL AUTO_INCREMENT,
+    idhangmuc int NOT NULL,
+    tenvattu varchar(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+    giathap double NOT NULL,
+    giacao double NOT NULL,
+    donvitinh int NOT NULL COMMENT '0:m2,1:cai',
+    CONSTRAINT vattuhangmucthicong_pk PRIMARY KEY (id)
+);
+
+-- End of file.
+
+drop table chitiethangmuccongtrinh;
+drop table chitietvattucongtrinh;
+drop table congviechangmucthicong;
+drop table danhsachcongtrinh;
+drop table danhsachdoithicong;
+drop table danhsachnhacungcap;
+drop table hangmucthicong;
+drop table lichchitiendoithicong;
+drop table trangthaicongtrinh;
+drop table trangthaihangmuc;
+drop table vattuhangmucthicong;

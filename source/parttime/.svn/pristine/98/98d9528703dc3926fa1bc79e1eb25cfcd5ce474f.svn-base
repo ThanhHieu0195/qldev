@@ -1,0 +1,100 @@
+#message-content
+{
+	/* Font */
+	font-family: Arial, Verdana, sans-serif !important;
+	font-size: 14px;
+
+	/* Text color */
+	color: #222;
+
+	/* Remove the background color to make it transparent */
+	background-color: #fff;
+    
+    padding: 0 10px 0 10px;
+}
+
+#message-content ol,ul,dl
+{
+	/* IE7: reset rtl list margin. (#7334) */
+	*margin-right:0px;
+	/* preserved spaces for rtl list item bullets. (#6249)*/
+    padding-right:40px;
+}
+
+#message-content a {
+    color: blue;
+    text-decoration: underline;
+}
+
+#message-content .title {
+	font-size: 20px;
+	font-weight: bold;
+	color: #F60;
+	line-height: 1.5em;
+}
+
+#message-content .modified, #topevent .modified {
+	color: #57A000;
+	font-size: 11px;
+	font-style:italic;
+}
+
+#message-content h1, #message-content h2, #message-content h3, #message-content h4, #message-content h5, #message-content h6, #message-content div, #message-content span, #message-content blockquote, #message-content p, #message-content address, #message-content form, #message-content fieldset, #message-content img, #message-content ul, #message-content ol, #message-content dl, #message-content dt, #message-content dd, #message-content li, #message-content hr, #message-content table, #message-content td, #message-content th, #message-content strong, #message-content em, #message-content sup, #message-content sub, #message-content dfn, #message-content ins, #message-content del, #message-content q, #message-content cite, #message-content var, #message-content samp, #message-content code, #message-content kbd, #message-content tt, #message-content pre {
+	
+}
+
+#message-content p {
+	display: block;
+	-webkit-margin-before: 0em;
+	-webkit-margin-after: 0em;
+	-webkit-margin-start: 0px;
+	-webkit-margin-end: 0px;
+	
+	padding: 0px 0 0px 0;
+	line-height: 1.5em;
+}
+	
+/* Unordered List */
+#message-content ul li {
+	background: url('images/bullet_black.png') center left no-repeat;
+    padding: 4px 0 4px 20px;
+}
+
+/* Ordered List */
+#message-content ol {
+	padding: 0 0 0 24px;
+}
+
+#message-content ol li {
+	list-style: decimal;
+	padding: 4px 0;
+}
+
+#topevent ul li {
+	width: 100%;
+	height: 20px;
+}
+
+#topevent a:link, #topevent a:visited {
+	color: blue;
+	text-decoration: none;
+	font-weight: normal;
+}
+
+#topevent a:hover {
+	color: #C90;
+	text-decoration: none;
+	font-weight: normal;
+}
+
+#topevent .list a:link, #topevent .list a:visited {
+	color: #616161;
+	text-decoration: none;
+	font-size: 12px;
+	font-style: italic;
+}
+
+#topevent .list a:hover {
+	color: #616161;
+	text-decoration: underline;
+}

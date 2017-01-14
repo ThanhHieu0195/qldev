@@ -1,0 +1,67 @@
+1. Quản lý hóa đơn VAT: 1hour
+a. Tạo table: hoadondo (id, mahoadon, ngayxuat, giatri)
+b. Tạo trang cho import thông tin hóa đơn từ excel (tham khảo http://thamthonhiky.net/hethongdev/guest/guestupload.php), file excel gồm 3 cột: mã hóa đơn, ngày xuất và giá trị 
+2. Add thêm thông tin mã đơn hàng vào table finance_token_detail: 2 hours
+a. Thêm column madon vào finance_token_detail
+b. Update trang finance/create-payment.php và finance/create-receipt.php, thêm field mã đơn hàng
+c. Khi nhân viên nhập mã đơn hàng lúc tạo phiếu thu/chi thì sẽ lưu mã đơn vào finance_token_detail
+
+3. Add thêm thông tin tài khoản vào finance_token_detail: 3 hours
+a. Thêm taikhoan madon vào finance_token_detail
+b. Update trang finance/create-payment.php và finance/create-receipt.php, thêm field taikhoan (loại select box giá trị: VCB, VTB, SCB, TietMat)
+c. Khi nhân viên chọn tài khoản lúc tạo phiếu thu/chi thì sẽ lưu tài khoản vào finance_token_detail
+d. Trong mục quản lý tài chính, tạo thêm trang query thông tin thu chi của từng tài khoản
+e. Người dùng sẽ chọn ngày bắt đầu và ngày kết thúc để query, table sẽ gồm 3 cột ( tên tài khoản, tổng thu, tổng chi)
+f. Khi người dùng click vào Tổng thu/Tổng chi thì sẽ mở ra trang mới liệt kê chi tiết những khoản chi tương ứngcuủa tài khoản
+
+4.  Tạo phiếu thu khi thu tiền đơn hàng
+a. Trang thu tiền đơn hàng tại đây: orders/cashlist.php
+b. Khi người dùng bấm vàobieểu tượng hình người để thu tiền thì sẽ tạo ra phiếu thu tương ứng. 
+c. Thêm select box để người dùng chọn tài khoản  (VCB, VTB, SCB, TietMat, giống như lúc tạo phiếuthu chi)
+d. Sau khi tạo phiếu thu sẽ ở trạng thái chờ approve: finance/approve-list.php
+
+5. Thêm thông tin nhân viên giao hàng vào đơn hàng: orders/orderdetail.php
+a. Thêm table giaohang gồm: id, mã đơn, mã nhân viên
+b. Thêm field trong orders/orderdetail.php cho phép chọn nhân viên giao hàng và lưu vào table trên (tương tự nhân viên bán hàng)
+c. Trong orders/orderdetail.phéphp, khi click vào chọn nhân viên giao hàng, chỉ liệt kê những nhân viên thuộc nhóm “Nhân viên giao hàng” (Nhóm này sẽ được tạo ra trong phân quyền)
+
+d. Làm trang thống kê số đơn hàng đã giao trong thời gian chọn trước của nhân viên giao hàng: datepicker để chọn ngày bắt đầu và ngày kết thúc thống kê, cột là tên nhân viên, hàng là số đơn hàng nhân viên đã giao theo từng ngày, hàng cuối cùng là SUM của tất cả các hàng ở trên. Tạo 1 menu mới “Quản lý KPI” và để trang này trong đó (tên trang: KPI nhân viên giao hàng)
+
+Group: deliver
+INSERT INTO `account_role_of_employee` (`employee_id`, `role_id`) VALUES ('admin', 'deliver'), ('thanhhieu', 'deliver');
+
+INSERT INTO `account_function_group` (`group_id`, `group_name`, `note`, `no`) VALUES ('manager_kpi', 'Quản lý KPI', 'Quản lý KPI', '19');
+
+INSERT INTO `account_function` (`function_id`, `group_id`, `function_name`, `note`, `enable`) VALUES ('kpi_deliver', 'manager_kpi', 'KPI nhân viên giao hàng', 'KPI nhân viên giao hàng', '1');
+
+INSERT INTO `account_function_of_role` (`role_id`, `function_id`) VALUES ('admin', 'kpi_deliver');
+
+
+
+Trang query kiểm tra thông tin VAT có chính xác hay không
+1. Thêm column hoadondo.status, default = NULL
+
+2. Hiện tại một số đơn hàng có VAT thì VAT sẽ được lưu trong table donhang “hoa_don_do”, 1 đơn hàng có thể có nhiều hóa đơn đỏ, được lưu theo: ma_hoa_don1, ma_hoa_don2…
+
+3. Thêm column “giatrihoadon” vào table donhang và trường “Giá trị tính hóa đơn đỏ” vào view/pay.php ngay bên dưới trường “Hóa đơn đỏ”. Khi đơn hàng được tạo ra, lưu trường này vào cột “giatrihoadon”
+//
+
+4. Thêm trường “Giá trị tính hóa đơn đỏ” vào “orders/orderdetail.php” ngay bên dưới trường “Hóa đơn đỏ” để xem và sửa lại
+//
+5. Trong trang “orders/cashlist.php”, khi nhân viên bấm vào hình người để thu tiền thì add popup cần thêm 1 hàng là thu VAT, số tiền VAT được tính tự động theo công thức:
+VAT = giatrihoadon * 0.1  + (giatrihoadon – thanhtien) * 0.2
+
+6. Khi nhân viên bấm thực hiện, phiếu thu sẽ sinh ra (chờ approve): sản phẩm “Chung chung”, loại “Doanh thu bán hàng”, Loại chi tiết “thu VAT”, số tiền = VAT tính ở trên
+
+7.  Làm 1 trang query để thống kê VAT trong “Quản lý tài chính” như sau:
+a. Dùng datatable
+a. Bao gồm các cột: STT, Mã đơn hàng, ngày giao, Mã hóa đơn đỏ, Thành tiền, Giá tính VAT, Ngày xuất hóa đơn, Giá trị hóa đơn, Tiền VAT đã thu, Kiểm tra. Tương ứng với: STT, donhang.madon, donhang.ngaygiao, hoadondo.mahoadon, donhang.thanhtien, donhang.giatrihoadon, hoadondo.ngayxuat, hoadondo.giatri, finance_token_detail. money_amount from hoadondo LEFT JOIN donhang (ON INSTR(donhang. hoa_don_do, hoadondo. mahoadon) > 0 ) LEFT JOIN finance_token_detail  (ON finance_token_detail.madon = donhang.madon) (WHERE finance_token_detail. item_id ~ tien thu VAT AND hoadondo.status=’NULL’), order by “donhang.madon”
+
+b. Đối với cột Kiểm tra, nếu Tiền VAT đã thu = hoadondo.giatri * 0.1 + (hoadondo.giatri-thanhtien)*0.2 thì hiển thị button “Duyệt”
+c. Khi user bấm vào Duyệt thì update hoadondo.status = “1”, refresh page
+
+ALTER TABLE `hoadondo` ADD `trangthai` INT NULL DEFAULT NULL AFTER `giatri`;	
+ALTER TABLE `donhang` ADD `giatrihoadondo` DOUBLE NOT NULL AFTER `hoa_don_do`;
+INSERT INTO `finance_item` (`item_id`, `category_id`, `name`, `enable`) VALUES ('57de5f7f03a0b', 'CP0001', 'Thu VAT', '1');
+INSERT INTO `account_function` (`function_id`, `group_id`, `function_name`, `note`, `enable`) VALUES ('statistic_vat', 'finance', 'Thông kê VAT', 'Thông kê VAT', '1');
+INSERT INTO `account_function_of_role` (`role_id`, `function_id`) VALUES ('admin', 'statistic_vat');

@@ -1,0 +1,6 @@
+#loading > img {
+    background-color: rgb(255, 255, 255);
+}
+.none {
+	display: none;
+}
