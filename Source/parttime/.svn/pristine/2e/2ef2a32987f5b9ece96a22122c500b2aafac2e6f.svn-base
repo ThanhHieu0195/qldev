@@ -1,0 +1,825 @@
+<?php
+
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
+/**
+ * Description of tranh
+ *
+ * @author LuuBinh
+ */
+include_once 'database.php';
+include_once 'donhang.php';
+include_once 'chitietdonhang.php';
+require_once 'helper.php';
+require_once 'tonkho.php';
+require_once 'khohang.php';
+
+class tranh extends database {
+
+    public $id = -1;
+    public static $CO_SAN = 1;
+    public static $CHO_GIAO = 2;
+    public static $DA_GIAO = 3;
+    public static $CAN_SX = 4;
+    public static $DANG_SX = 5;
+
+    //put your code here
+    function them_tranh_dat($maloai, $tentranh, $masotranh, $dai, $rong, $giaban, $ghichu) {
+        $sql = "INSERT INTO tranh (masotranh, tentranh, maloai, dai, rong, giaban, ghichu, hinhanh, state) ";
+        $sql .= "VALUES ('$masotranh', '$tentranh', '$maloai', '$dai', '$rong', '$giaban', '$ghichu', 'pic_images/noimage2.jpg', '4')";
+        $this->setQuery($sql);
+
+        $result = $this->query();
+        $this->id = mysql_insert_id();
+        $this->disconnect();
+        return $result;
+    }
+
+    //them tranh moi vao CSDL
+    function them_tranh_moi($maloai, $tentranh, $masotranh, $dai, $rong, $giaban, $matho, $makho, $hinhanh, $soluong) {
+//        $sql = "INSERT INTO tranh (maloai, tentranh, masotranh, dai, rong, giaban, matho, makho, hinhanh, state) ";
+//        $sql .= "VALUES ('$maloai', '$tentranh', '$masotranh', '$dai', '$rong', '$giaban', '$matho', '$makho', '$hinhanh', '1')";
+//        $this->setQuery($sql);
+
+        $format = "REPLACE INTO tranh
+                   SET maloai = %d,
+                       tentranh = '%s',
+                       masotranh = '%s',
+                       dai = '%s',
+                       rong = '%s',
+                       giaban = '%s',
+                       matho = '%s',
+                       makho = %d,
+                       hinhanh = '%s',
+                       soluong = %d,
+                       state = %d
+                   WHERE manv = '%s'";
+
+        $result = $this->query();
+        $this->id = mysql_insert_id();
+        $this->disconnect();
+        return $result;
+    }
+
+    //cap nhat nhung tranh co san da duoc dat mua dang cho giao
+    function cap_nhat_tranh_dat_mua($str) {
+        $sql = "UPDATE tranh SET state=2 WHERE idtranh IN ($str) AND state=1";
+        $this->setQuery($sql);
+
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+
+    //cap nhat trang thai cho cac buc tranh trong danh sach
+    function cap_nhat_trang_thai_tranh($str, $state) {
+        $sql = "UPDATE tranh SET state='$state' WHERE idtranh IN ($str) AND state NOT IN (" . tranh::$CAN_SX . "," . tranh::$DANG_SX . ")";
+        $this->setQuery($sql);
+
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+
+    //cap nhat trang thai cho 1 buc tranh
+    function cap_nhat_trang_thai_1_buc_tranh($idtranh, $state) {
+        $sql = "UPDATE tranh SET state='$state' WHERE idtranh = '$idtranh'";
+
+        $this->setQuery($sql);
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+
+    //cap nhat tranh da giao
+    function cap_nhat_tranh_da_giao($id) {
+        $sql = "UPDATE tranh SET state=3 WHERE idtranh=$id";
+        $this->setQuery($sql);
+
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+
+    //lay danh sach tranh theo yeu cau
+    function lay_danh_sach_tranh($loai) {
+        $sql = "SELECT * FROM tranh WHERE state = $loai";
+        $this->setQuery($sql);
+
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+
+    //Lay danh sach can san xuat
+    function danh_sach_tranh_san_xuat_($loai) {
+        $sql = "SELECT tranh.*, donhang.ngaygiao, tentranh.tentranh as ten " .
+                "FROM tranh " .
+                "           inner join tentranh on tranh.tentranh=tentranh.id " .
+                "           inner join chitietdonhang on tranh.idtranh=chitietdonhang.idtranh " .
+                "           inner join donhang on chitietdonhang.madon=donhang.madon " .
+                "WHERE state = '$loai' " .
+                "ORDER BY ngaygiao DESC";
+        $this->setQuery($sql);
+
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+
+    //Lay danh sach can san xuat
+    function danh_sach_tranh_san_xuat() {
+        $sql = "SELECT tranh.*, donhang.ngaygiao, tentranh.tentranh as ten " .
+                "FROM tranh " .
+                "           inner join tentranh on tranh.tentranh=tentranh.id " .
+                "           inner join chitietdonhang on tranh.idtranh=chitietdonhang.idtranh " .
+                "           inner join donhang on chitietdonhang.madon=donhang.madon " .
+                "WHERE state IN (" . tranh::$CAN_SX . "," . tranh::$DANG_SX . ") " .
+                "ORDER BY state ASC, ngaygiao ASC";
+        $this->setQuery($sql);
+
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+
+    //Lay danh sach tranh theo phan trang
+    function danh_sach_tranh_phan_trang($limit) {
+        $sql = "SELECT tranh.*, tentranh.tentranh as tentranh, trangthai.name " .
+                "FROM tranh INNER JOIN tentranh ON tranh.tentranh=tentranh.id " .
+                "           INNER JOIN trangthai ON tranh.state=trangthai.state " .
+                "WHERE tranh.state = '" . tranh::$CO_SAN . "'" .
+                "ORDER BY state ASC, masotranh ASC " .
+                "LIMIT $limit";
+        $this->setQuery($sql);
+
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+
+    //danh sach tranh co san trong cac kho
+    function lay_danh_sach_tranh_co_san($list, $all) {
+        $sql = "SELECT tranh.*,
+                       tranh.tentranh,
+                       khohang.tenkho
+                FROM tranh 
+                           INNER JOIN khohang ON tranh.makho = khohang.makho
+                WHERE state ='" . tranh::$CO_SAN . "' ";
+        if (!$all)
+            $sql.= "   AND idtranh NOT IN(SELECT idtranh FROM chitietdonhang)";
+        if (!empty($list))
+            $sql.= "    AND idtranh NOT IN ($list)";
+        $sql .= "   ORDER BY masotranh ASC";
+
+        $this->setQuery($sql);
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+
+    //danh sach tranh cho giao trong cac kho
+    function lay_danh_sach_tranh_cho_giao($list) {
+        $sql = "SELECT tranh.*,
+                       tranh.tentranh,
+                       khohang.tenkho,
+               donhang.ngaygiao
+                FROM tranh 
+                           INNER JOIN khohang ON tranh.makho = khohang.makho
+                           INNER JOIN chitietdonhang ON chitietdonhang.idtranh = tranh.idtranh
+                           INNER JOIN donhang ON donhang.madon = chitietdonhang.madon
+                WHERE state ='" . tranh::$CHO_GIAO . "'";
+        if (!empty($list))
+            $sql.= "    AND tranh.idtranh NOT IN ($list)";
+        $sql .= "   ORDER BY donhang.ngaygiao ASC, masotranh ASC";
+
+        $this->setQuery($sql);
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+
+    //++ REQ20120508_BinhLV_M
+    // Danh sach tranh trong kho
+    function lay_danh_sach_tranh_trong_kho($makho)
+    {
+        $sql = "SELECT tranh.*,
+                       tranh.tentranh,
+                       loaitranh.tenloai AS tenloai,
+                       tonkho.soluong
+                FROM tranh 
+                          INNER JOIN loaitranh ON tranh.maloai = loaitranh.maloai
+                          INNER JOIN tonkho ON tranh.masotranh = tonkho.masotranh
+                WHERE makho = '$makho'
+                ORDER BY tranh.masotranh ASC";
+        $this->setQuery($sql);
+        
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+    //-- REQ20120508_BinhLV_M
+
+    //lay danh sach tranh can san xuat nhung khong thuoc don hang nao
+    public static $query_danh_sach_tranh_dat_khong_thuoc_don_hang = "SELECT
+                                                                        tranh.idtranh,
+                                                                        tranh.masotranh,
+                                                                        tranh.tentranh,
+                                                                        tranh.dai,
+                                                                        tranh.rong,
+                                                                        tranh.giaban
+                                                                    FROM tranh
+                                                                    WHERE state = '4' AND idtranh NOT IN(SELECT DISTINCT idtranh FROM chitietdonhang )";
+
+    function danh_sach_tranh_dat_khong_thuoc_don_hang() {
+        $this->setQuery(tranh::$query_danh_sach_tranh_dat_khong_thuoc_don_hang);
+        $result = $this->loadAllRow();
+        $this->disconnect();
+        return $result;
+    }
+
+    //xoa het cac buc tranh dat khong thuoc don hang nao
+    function xoa_danh_sach_tranh_dat_khong_thuoc_don_hang() {
+        $sql = "DELETE
+                FROM tranh
+                WHERE state = '4' AND idtranh NOT IN(SELECT DISTINCT idtranh FROM chitietdonhang )";
+
+        $this->setQuery($sql);
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+
+    //lay chi tiet cua 1 buc tranh co trong 1 don dat hang
+    function chi_tiet_tranh_cho_giao($id) {
+        $sql = "SELECT d.ngaydat, d.ngaygiao, d.madon, ";
+        $sql .= "t.idtranh, t.masotranh, t.dai, t.rong, t.giaban, t.hinhanh ";
+        $sql .= "FROM chitietdonhang c ";
+        $sql.= "    INNER JOIN tranh t ON c.idtranh = t.idtranh ";
+        $sql .= "   INNER JOIN donhang d ON c.madon = d.madon ";
+        $sql .= "WHERE t.idtranh='$id' AND t.state=2";
+
+        $this->setQuery($sql);
+        $result = $this->query();
+        $row = mysql_fetch_array($result);
+//        echo '<pre>';
+//        print_r($row);
+//        echo '</pre>';
+        $this->disconnect();
+        //return $result;
+        return $row;
+    }
+
+//tao ban copy cua 1 buc tranh cho giao nhung ban ngay cho khach
+    function tao_tranh_san_xuat($id) {
+        //Lay thong tin cua buc tranh can tao ban sao
+        $this->setQuery("SELECT * FROM tranh WHERE idtranh=$id");
+        $row = mysql_fetch_array($this->query());
+
+        $masotranh = $row[masotranh] . "_COPY";
+
+        //Them buc tranh ban sao vao CSDL
+        $sql = "INSERT INTO tranh (masotranh, tentranh, maloai, dai, rong, giaban, matho, makho, ghichu, hinhanh, state) ";
+        //$sql .= "VALUES ('NOT SET', '$row[maloai]', '$row[dai]', '$row[rong]', '$row[giaban]', '$row[matho]', '$row[makho]', '$row[ghichu]', 'pic_images/noimage2.jpg', '4')";
+        $sql .= "VALUES ('$masotranh', ";
+        $sql .= ( $row[tentranh] == "") ? "NULL, " : "'" . $row[tentranh] . "', ";
+        $sql .= ( $row[maloai] == "") ? "NULL, " : "'" . $row[maloai] . "', ";
+        $sql .= ( $row[dai] == "") ? "NULL, " : "'" . $row[dai] . "', ";
+        $sql .= ( $row[rong] == "") ? "NULL, " : "'" . $row[rong] . "', ";
+        $sql .= ( $row[giaban] == "") ? "NULL, " : "'" . $row[giaban] . "', ";
+        $sql .= ( $row[matho] == "") ? "NULL, " : "'" . $row[matho] . "', ";
+        $sql .= ( $row[makho] == "") ? "NULL, " : "'" . $row[makho] . "', ";
+        $sql .= ( $row[ghichu] == "") ? "NULL, " : "'" . $row[ghichu] . "', ";
+        $sql .= "'pic_images/noimage2.jpg', '4')";
+        //echo $sql . "<br />";
+        $this->setQuery($sql);
+        $this->query();
+        $newid = mysql_insert_id();  //ID cua buc tranh vua them vao
+        //echo mysql_error();
+        //Cap nhat trong chi tiet don hang co buc tranh $id
+        $sql = "UPDATE chitietdonhang SET idtranh=$newid WHERE idtranh=$id";
+        $this->setQuery($sql);
+        $this->query();
+        //echo mysql_error();
+
+        $this->disconnect();
+    }
+
+    //++ REQ20120508_BinhLV_M
+    // Lay chi tiet cua 1 buc tranh
+    function chi_tiet_tranh($id)
+    {
+        $sql = "SELECT * FROM tranh WHERE masotranh = '$id'";
+        $this->setQuery($sql);
+
+        $result = $this->query();
+        $row = mysql_fetch_array($result);
+        $this->disconnect();
+        return $row;
+    }
+    //-- REQ20120508_BinhLV_M
+
+    //dem so tranh can san xuat
+    function dem_so_tranh_can_san_xuat($list) {
+        $sql = "select count(*) as num
+                from tranh
+                where idtranh in($list) and state='" . tranh::$CAN_SX . "'";
+
+        $this->setQuery($sql);
+        $result = $this->query();
+        $row = mysql_fetch_array($result);
+        $this->disconnect();
+        return $row['num'];
+    }
+
+    //++ REQ20120508_BinhLV_M
+    // Cap nhat thong tin cua 1 buc tranh
+    function cap_nhat_tranh($masotranh, $maloai, $tentranh, $dai, $rong, $giaban, $ghichu, $matho, $hinhanh, $tongmau, $hoavan)
+    {
+        $sql = "UPDATE tranh
+                SET maloai = '%s',
+                    tentranh = '%s',
+                    dai = '%s',
+                    rong = '%s',
+                    giaban = '%s',
+                    ghichu = '%s',
+                    matho = '%s',
+                    hinhanh = '%s',
+                    tongmau = '%s',
+                    hoavan = '%s'
+                WHERE masotranh = '%s'";
+        $sql = sprintf($sql, $maloai, $tentranh, $dai, $rong, $giaban, $ghichu, $matho, $hinhanh,  $tongmau, $hoavan, $masotranh);
+
+        $this->setQuery($sql);
+        $result = $this->query();
+        $this->disconnect();
+        
+        return $result;
+    }
+    //-- REQ20120508_BinhLV_M
+
+//cap nhat ghi chu tranh can san xuat
+    function cap_nhat_ghi_chu_tranh_sx($id, $ghichu) {
+        $sql = "UPDATE tranh SET ";
+        $sql .= "ghichu = '$ghichu' ";
+        $sql .= "WHERE idtranh = $id";
+
+        $this->setQuery($sql);
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+
+    //cap nhat gia cua mot buc tranh can san xuat
+    function cap_nhat_gia_tranh_sx($id, $giacu, $giamoi) {
+        //update gia trong bang tranh
+        $sql = "UPDATE tranh SET ";
+        $sql .= "giaban = '$giamoi' ";
+        $sql .= "WHERE idtranh = '$id'";
+        $this->setQuery($sql);
+        $result = $this->query();
+
+        //lay ma hoa don dat mua buc tranh
+        $ctdh = new chitietdonhang();
+        $mahd = $ctdh->ma_hoa_don_dat_tranh_sx($id);
+        //echo $mahd."<br />";
+        //lay cac thong tin trong hoa don
+        $dh = new donhang();
+        $row = $dh->chi_tiet_don_hang($mahd);
+        $tongtien = $row['tongtien'];
+        //echo $tongtien."<br />";
+        $tongtien = $tongtien + ($giamoi - $giacu);  // tong tien
+        //echo $tongtien."<br />";
+        $giamtheo = $row['giamtheo'];  // giam theo
+        $tiengiam = $row['tiengiam'];  // tien giam
+        $thanhtien = $tongtien - $tiengiam;  // thanh tien - neu giam theo tien
+        // thanh tien - neu giam theo phan tram
+        if ($giamtheo == donhang::$GIAM_THEO_PHAN_TRAM)
+            $thanhtien = $tongtien * (100 - $tiengiam) / 100;
+        $conlai = $thanhtien - $row['duatruoc'];
+
+        //cap nhat lai: tongtien, thanhtien, conlai cua hoa don
+        $dh = new donhang();
+        $result = $result && $dh->cap_nhat_thong_tin_tien_don_hang($mahd, $tongtien, $thanhtien, $conlai);
+
+        //$this->disconnect();
+        return $result;
+    }
+
+//cap nhat kho hang cho danh sach san pham
+    function cap_nhat_kho($items, $makho) {
+        $sql = "UPDATE tranh SET ";
+        $sql .= "makho = '$makho' ";
+        $sql .= "WHERE idtranh IN ($items)";
+        $this->setQuery($sql);
+
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+
+    //++ REQ20120508_BinhLV_M
+    //xoa tranh
+    function xoa_tranh($masotranh)
+    {
+        $sql = "DELETE FROM tranh WHERE masotranh = '%s'";
+        $sql = sprintf($sql, $masotranh);
+        
+        $this->setQuery($sql);
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+    //-- REQ20120508_BinhLV_M
+
+    //++ REQ20120508_BinhLV_N
+    // Them san pham moi
+    function them($masotranh, $tentranh, $maloai, $cao='', $dai, $rong, $giavon='', $giaban, $matho, $ghichu, $hinhanh, $tongmau, $hoavan, $loai='')
+    {
+        $sql = "REPLACE INTO tranh (masotranh, tentranh, maloai, cao, dai, rong, giavon, giaban, matho, ghichu, hinhanh, tongmau, hoavan, loai)
+                VALUES ('%  s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')";
+        $sql = sprintf($sql, $masotranh, $tentranh, $maloai, $cao, $dai, $rong, $giavon, $giaban, $matho, $ghichu, $hinhanh, $tongmau, $hoavan, $loai);
+
+        $this->setQuery($sql);
+        $result = $this->query();
+        $this->disconnect();
+        return $result;
+    }
+    //-- REQ20120508_BinhLV_N
+    
+    //++ REQ20120915_BinhLV_N
+    // Dem tong so san pham
+    function count($term)
+    {
+        // Danh sach cac cot tim kiem trong bang 'tranh'
+        $columns =  array( 'tranh.masotranh', 'tranh.tentranh', 'loaitranh.tenloai', 'tranh.giaban', 'tranh.ghichu', 'tranh.hinhanh' );
+        
+        $table = "tranh
+                       INNER JOIN loaitranh ON tranh.maloai = loaitranh.maloai";
+    
+        // Tao cau lenh SQL dung de tim kiem
+        $where = "";
+        if ( isset($term) && $term != "" )
+        {
+            $where = "WHERE (";
+            for ( $i=0, $len = count($columns); $i<$len ; $i++ )
+            {
+                $where .= $columns[$i] . " LIKE '%" . $term . "%' OR ";
+            }
+            $where = substr_replace( $where, "", -3 );
+            $where .= ')';
+        }
+    
+        $sql = "
+                SELECT COUNT(tranh.masotranh) AS sum 
+                FROM $table
+                $where
+               ";
+        
+        $this->setQuery($sql);
+        $row = mysql_fetch_array($this->query());
+        $this->disconnect();
+        
+        return $row['sum'];
+    }
+    
+    // Lay danh sach san pham theo cach thong so tim kiem
+    function danh_sach_tim_kiem($term, $limit)
+    {        
+        // Ket qua default (khong tim thay)
+        $output = array();
+    
+        // Danh sach cac cot tim kiem trong bang 'tranh'
+        $columns =  array( 'tranh.masotranh', 'tranh.tentranh', 'loaitranh.tenloai', 'tranh.giaban', 'tranh.ghichu', 'tranh.hinhanh' );
+        
+        $table = "tranh
+                       INNER JOIN loaitranh ON tranh.maloai = loaitranh.maloai";
+    
+        // Tao cau lenh SQL dung de tim kiem
+        $where = "";
+        if ( isset($term) && $term != "" )
+        {
+            $where = "WHERE (";
+            for ( $i=0, $len = count($columns); $i<$len ; $i++ )
+            {
+                $where .= $columns[$i] . " LIKE '%" . $term . "%' OR ";
+            }
+            $where = substr_replace( $where, "", -3 );
+            $where .= ')';
+        }
+    
+        $order == "ORDER BY tranh.masotranh ASC";
+        
+        $limit = ($limit != '') ? 'LIMIT ' . $limit : '';
+    
+        $sql = "
+                SELECT " . str_replace(" , ", " ", implode(", ", $columns)) . "
+                FROM $table
+                $where
+                $order
+                $limit
+               ";
+        
+        // return $sql;
+        
+        // Lay du lieu tu database
+        $this->setQuery($sql);
+        $array = $this->loadAllRow();
+        $this->disconnect();
+        
+        if(is_array($array))
+        {
+            $output = array();
+            $ton_kho = new tonkho();
+            foreach($array as $row)
+            {
+                $row['tonkho'] = $ton_kho->so_luong_o_showroom($row['masotranh']);
+                array_push($output, $row);
+            }
+        }
+        
+        return $output;
+    }
+    
+	// Lay danh sach san pham de export ra excel
+    function danh_sach_san_pham_export()
+    {        
+        // Ket qua default (khong tim thay)
+        $output = array();
+    
+        // Danh sach cac cot tim kiem trong bang 'tranh'
+        $columns =  array( 'tranh.masotranh', 'tranh.tentranh', 'loaitranh.tenloai', 'tranh.giaban', 'tranh.ghichu' );
+        
+        $table = "tranh
+                       INNER JOIN loaitranh ON tranh.maloai = loaitranh.maloai";
+    
+        $order == "ORDER BY tranh.masotranh ASC";
+    
+        $sql = "
+                SELECT " . str_replace(" , ", " ", implode(", ", $columns)) . "
+                FROM $table
+                $order
+               ";
+        
+        // return $sql;
+        
+        // Lay du lieu tu database
+        $this->setQuery($sql);
+        $array = $this->loadAllRow();
+        $this->disconnect();
+        
+        if(is_array($array))
+        {
+            $output = array();
+            $ton_kho = new tonkho();
+            foreach($array as $row)
+            {
+                $row['masotranh'] = $row['masotranh'] . ' ';
+                $row['giaban'] = number_2_string($row['giaban'], '');
+                
+                $data = $ton_kho->so_luong_o_showroom($row['masotranh']);
+                foreach ($data as $item)
+                {
+                    $row[$item['showroom']] = $item['soluong'];
+                }
+                
+                array_push($output, $row);
+            }
+        }
+        
+        return $output;
+    }
+
+
+        // Lay danh sach san pham de export ra excel
+    function danh_sach_san_pham_export_excel($listkho, $listmau, $listhoavan, $listloai, $daimin, $daimax, $rongmin, $rongmax)
+    {
+        // Ket qua default (khong tim thay)
+        $output = array();
+
+        // Danh sach cac cot tim kiem trong bang 'tranh'
+        $columns =  array( 'tranh.masotranh', 'tranh.tentranh', 'loaitranh.tenloai', 'tranh.giaban', 'tranh.ghichu' , 'tranh.hinhanh', 'tranh.tongmau', 'tranh.hoavan', 'tranh.dai', 'tranh.rong', 'loaitranh.donvi');
+
+        $table = "tranh
+                       INNER JOIN loaitranh ON tranh.maloai = loaitranh.maloai
+                 ";
+        $khohang = join("','",$listkho);
+        $hoavan = join("','",$listhoavan); 
+        $loai = join("','",$listloai);
+        $mau = join("','",$listmau);
+        $where = "
+                  tranh.tongmau IN ('$mau')
+                  AND tranh.hoavan IN ('$hoavan')
+                  AND tranh.maloai IN ('$loai')
+                 ";
+        if ($daimax) { 
+            $where .= " AND tranh.dai<= '$daimax' ";
+        }
+        if ($daimin) { 
+            $where .= " AND tranh.dai>= '$daimin' ";
+        }
+        if ($rongmax) { 
+            $where .= " AND tranh.rong<= '$rongmax' ";
+        }
+        if ($rongmin) {
+            $where .= " AND tranh.rong>= '$rongmin' ";
+        }
+
+        $order = "ORDER BY tranh.masotranh ASC";
+
+        $sql = "
+                SELECT " . str_replace(" , ", " ", implode(", ", $columns)) . "
+                FROM $table
+                where $where
+                $order 
+               ";
+
+        // return $sql;
+
+        // Lay du lieu tu database
+        $this->setQuery($sql);
+        $array = $this->loadAllRow();
+        $this->disconnect();
+
+        if(is_array($array))
+        {
+            $output = array();
+            $ton_kho = new tonkho();
+            foreach($array as $row)
+            {
+                $row['masotranh'] = $row['masotranh'] . ' ';
+                $row['giaban'] = number_2_string($row['giaban'], '');
+
+                $data = $ton_kho->so_luong_o_showrooms($row['masotranh'], $listkho);
+                $row['soluong'] = $data['soluong'];
+
+                array_push($output, $row);
+            }
+        }
+
+        return $output;
+    }
+    
+    // Danh sach ten cot cua bang export
+    function danh_sach_column_export()
+    {
+    	$result = array();
+    	$result[] = 'Mã sản phẩm';
+    	$result[] = 'Tên sản phẩm';
+    	$result[] = 'Loại sản phẩm';
+    	$result[] = 'Giá bán';
+    	$result[] = 'Ghi chú';
+    	
+    	$kho = new khohang();
+    	$showroom = $kho->danh_sach();
+    	foreach ($showroom as $item)
+    	{
+    	    $result[] = $item['tenkho'];
+    	}
+    
+    	return $result;
+    }
+
+    // Danh sach ten field cua bang export
+    function danh_sach_field_export()
+    {
+    	$result = array();
+    	$result[] = 'masotranh';
+    	$result[] = 'tentranh';
+    	$result[] = 'tenloai';
+    	$result[] = 'giaban';
+    	$result[] = 'ghichu';
+    	 
+    	$kho = new khohang();
+    	$showroom = $kho->danh_sach();
+    	foreach ($showroom as $item)
+    	{
+    		$result[] = $item['makho'];
+    	}
+    
+    	return $result;
+    }
+    //-- REQ20120915_BinhLV_N
+    
+    function is_exist($masotranh)
+    {
+        $sql = "SELECT masotranh FROM tranh WHERE masotranh = '$masotranh'";           
+        $this->setQuery($sql); 
+        $row = mysql_fetch_object($this->query());
+        
+        if($row)
+            return TRUE;
+        return FALSE;
+    }
+    
+    // Thong ke so luong ton kho & so luong cho giao cua mot san pham
+    function statistic_number($masotranh, &$arr = NULL, $create_link = TRUE)
+    {
+        $ton_kho = 0;  // Tong so luong ton
+        $cho_giao = 0; // Tong so luong cho giao
+        
+        /* Tong so luong ton */
+        $sql = "SELECT IFNULL(SUM(soluong), 0) AS soluong FROM tonkho WHERE masotranh = '$masotranh';";
+        $this->setQuery($sql); 
+        $row = mysql_fetch_object($this->query());
+        if($row)
+        {
+            $ton_kho = $row->soluong;
+        }
+        
+        /* Tong so luong cho giao */
+        $status = chitietdonhang::$CHO_GIAO;
+        $approved = donhang::$APPROVED;
+        $sql = "SELECT IFNULL(SUM(c.soluong), 0) AS soluong 
+                FROM chitietdonhang c INNER JOIN donhang d ON c.madon = d.madon
+                WHERE c.masotranh = '$masotranh' AND c.trangthai = $status AND d.approved = $approved;";
+        $this->setQuery($sql); 
+        $row = mysql_fetch_object($this->query());
+        if($row)
+        {
+            $cho_giao = $row->soluong;
+        }
+        
+        $output = "";
+        $output .= sprintf("&bull; <span style='color:rgb(22,167,101);'>Tổng tồn:</span> %d<br />", $ton_kho);
+        if($cho_giao >= $ton_kho)
+        {
+            $output .= sprintf("&bull; <span style='color:rgb(73,134,231);'>Chờ giao:</span> <label style='color:black; background-color:none;'>%d</label>", $cho_giao);
+        }
+        else
+        {
+            $output .= sprintf("&bull; <span style='color:rgb(73,134,231);'>Chờ giao:</span> <label style='color:black; background-color:none;'>%d</label>", $cho_giao);
+        }
+        if($cho_giao > 0 && $create_link)
+        {
+            $output .= "<a title='Xem danh sách đơn hàng' href='javascript:showOrderListDialog(\"{$masotranh}\");'><img alt='add' src='../resources/images/icons/view.png' /></a>";
+        }
+        
+        $arr = array(
+                'total' => $ton_kho, 
+                'selled' => $cho_giao, 
+                'remaind' => ($cho_giao >= $ton_kho) ? 0 : $ton_kho - $cho_giao);
+
+        return $output;
+    }
+    
+    // Thong ke so luong ton kho & so luong cho giao cua mot san pham theo danh sach kho
+    function statistic_number_by_stores($masotranh, $stores, $create_link = FALSE)
+    {
+        $ton_kho = 0;  // Tong so luong ton
+        $cho_giao = 0; // Tong so luong cho giao
+    
+        /* Tong so luong ton */
+        if (is_array($stores)) {
+            $tmp = "'" . str_replace ( ", ", "', '", implode ( ", ", $stores ) ) . "'";
+            $sql = "SELECT IFNULL(SUM(soluong), 0) AS soluong FROM tonkho WHERE masotranh = '$masotranh' AND makho IN ({$tmp}) ;";
+            $this->setQuery($sql);
+            //debug($sql);
+            $row = mysql_fetch_object($this->query());
+            if($row)
+            {
+                $ton_kho = $row->soluong;
+            }
+        }
+    
+        /* Tong so luong cho giao */
+        $status = chitietdonhang::$CHO_GIAO;
+        $approved = donhang::$APPROVED;
+        $sql = "SELECT IFNULL(SUM(c.soluong), 0) AS soluong
+        FROM chitietdonhang c INNER JOIN donhang d ON c.madon = d.madon
+        WHERE c.masotranh = '$masotranh' AND c.trangthai = $status AND d.approved = $approved;";
+        $this->setQuery($sql);
+        $row = mysql_fetch_object($this->query());
+        if($row)
+        {
+            $cho_giao = $row->soluong;
+        }
+    
+        $output = "";
+        $output .= sprintf("&bull; <span style='color:rgb(22,167,101);'>Tổng tồn:</span> %d<br />", $ton_kho);
+        if($cho_giao >= $ton_kho)
+        {
+            $output .= sprintf("&bull; <span style='color:rgb(73,134,231);'>Chờ giao:</span> <label style='color:black; background-color:none;'>%d</label>", $cho_giao);
+        }
+        else
+        {
+            $output .= sprintf("&bull; <span style='color:rgb(73,134,231);'>Chờ giao:</span> <label style='color:black; background-color:none;'>%d</label>", $cho_giao);
+        }
+        if($cho_giao > 0 && $create_link)
+        {
+            $output .= "<a title='Xem danh sách đơn hàng' href='javascript:showOrderListDialog(\"{$masotranh}\");'><img alt='add' src='../resources/images/icons/view.png' /></a>";
+        }
+    
+        $arr = array(
+            'total' => $ton_kho,
+            'selled' => $cho_giao,
+            'remaind' => ($cho_giao >= $ton_kho) ? 0 : $ton_kho - $cho_giao);
+    
+        return $output;
+    }
+}
+
+?>

@@ -1,0 +1,87 @@
+ .popup {
+    padding: 10px 10px 10px 10px;
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    display: none;
+}
+.popup > row {
+    display: inherit;
+    color: #792929;
+
+    padding: 10px;
+}
+.popup input[type=button], .popup input[type=submit] {
+    line-height: 15px;
+    min-width: 100px; 
+    padding: 10px 20px;
+    color: #FFFFFF; 
+}
+
+.btn-function {
+    width: 100px;
+    margin-top: 20px;
+    padding: 30px;
+    color: #a9a7a7;
+    transition: 0.5s ease;
+}
+
+.btn-function:hover {
+    background: #6C0909;
+}
+
+.popup .title{
+    font-size: medium;
+    padding: 10px 10px;
+}
+.popup input[type=button]:hover{
+    font-weight: bold;
+}
+.popup .btn_submit {
+    background-color: #0029FB;
+}
+.popup .btn_exit {
+    background-color: #FF4200;
+}
+/**/
+.editrow {
+    background-color: #FF8A00;
+    color: #FFFFFF;
+}
+#f_edit {
+
+}
+
+.popup table, .popup table th, .popup table td, .popup table tr{
+    padding: 10px;
+    text-align: center;
+}
+
+.popup table table th, .popup table table th {
+    font-weight: bold;
+}
+
+.popup table textarea, .popup table input[type=text], .popup table select{
+    text-align: center;
+    background: none;
+    background-color: #EBDEDE;
+    padding: 5px;
+    color: #433C3C;
+}
+
+.addrow {
+    min-width: 70px;
+    padding: 10px;
+    color: white;
+    background: #086b34;
+    border: 0.5px solid black;
+}
+.addrow:hover {
+    background-color: #0BAA12;
+    border: 1px solid #CECCCC;
+    font-weight: bold;
+}
+
+.delrow {
+    background-color: #FF0000;
+    color: #FFFFFF;
+}

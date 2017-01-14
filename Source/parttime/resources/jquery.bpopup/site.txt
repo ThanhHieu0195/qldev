@@ -1,0 +1,5 @@
+17 jQuery Modal Dialog Boxes: https://www.sitepoint.com/14-jquery-modal-dialog-boxes/
+
+jQuery.bPopup.js: 
+	http://dinbror.dk/bpopup/
+	http://dinbror.dk/blog/bPopup/

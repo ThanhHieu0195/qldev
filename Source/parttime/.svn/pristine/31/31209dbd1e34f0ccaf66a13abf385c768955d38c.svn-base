@@ -1,0 +1,89 @@
+<?php
+require_once '../part/common_start_page.php';
+
+// Authenticate
+do_authenticate ( G_ORDERS, F_ORDERS_RETURNS, TRUE );
+
+if (isset ( $_GET ['order'] ) && isset ( $_GET ['item'] ) && isset ( $_GET ['store'] )) {
+    $madon = $_GET ['order'];
+    $masotranh = $_GET ['item'];
+    $makho = $_GET ['store'];
+    
+    require_once '../models/donhang.php';
+    require_once '../models/chitietdonhang.php';
+    
+    $db_donhang = new donhang ();
+    $db_donhang->returns ( $madon, $masotranh, $makho );
+    $db_chitiet = new chitietdonhang();
+    $array = $db_chitiet->danh_sach_san_pham_hien_huu($madon);
+    if ((! is_array($array)) || (count($array)==0)):
+       $tmp = $db_donhang->cap_nhat_ngay_giao($madon); 
+    endif;
+    
+    redirect ( "../orders/orderdetail.php?item=" . $madon );
+}
+$result = array( 'result' => 0, 'data' => array() );
+if ( isset($_GET['action']) ) {
+    $action = $_GET['action'];
+    $do = $_GET['do'];
+    $madonhang  = $_GET['madonhang'];
+    if ($action == 'chitietsp') {
+         switch ($do) {
+            case 'reject':
+                require_once "../models/hangkhachdat.php";
+                $hangkhachdat = new hangkhachdat();
+                $masotranh  = $_GET['masotranh'];
+                $machitiet = $_GET['machitiet'];
+                $hangkhachdat->reject($madonhang, $masotranh, $machitiet);
+                redirect ( "../orders/orderdetail.php?item=" . $madonhang );
+
+                break;
+            case 'loadmakho':
+                require_once "../models/tonkhosanxuat.php";
+                $machitiet = $_GET['machitiet'];
+                $soluong = $_GET['soluong'];
+                $tonkhosanxuat = new tonkhosanxuat();
+                $data = $tonkhosanxuat->laykhohang($machitiet, $soluong);
+                if (is_array($data)) {
+                    $result['result'] = 1;
+                    $result['data'] = $data;
+                }
+                echo json_encode($result);
+                break;
+            case 'giaohang':
+                $madonhang      = $_GET['madon'];
+                $masotranh      = $_GET['masotranh'];
+                $machitiet      = $_GET['machitiet'];
+                $soluong        = $_GET['soluong'];
+                $makho          = $_GET['makho'];
+
+                require_once "../models/tonkhosanxuat.php";
+                $tonkhosanxuat = new tonkhosanxuat();
+                if ( $tonkhosanxuat->giaohang($makho, $machitiet, $soluong) ) {
+                    require_once "../models/hangkhachdat.php";
+                    require_once '../models/bill_note.php';
+                    require_once '../models/khohang.php';
+                    $kh = new khohang();
+                    $tenkho = $kh->ten_kho($makho);
+                    $bill_note = new bill_note();
+                    $ghichu = "Giao hang <b>" . $machitiet .  "</b> tu kho <b>" . $tenkho . "</b>";
+                    $acc = current_account();
+                    $bill_note->add_new($acc, $madonhang, $ghichu);
+                    $hangkhachdat = new hangkhachdat();
+                    if ( $hangkhachdat->received($madonhang, $masotranh, $machitiet) ) {
+                        if ($hangkhachdat->capnhattrangthaichitietdonhang($madonhang, $masotranh)) {
+                            redirect ( "../orders/orderdetail.php?item=" . $madonhang );
+                        }
+                    } else {
+                        $tonkhosanxuat->trahang($makho, $machitiet, $soluong);
+                    }
+                }
+                redirect ( "../orders/orderdetail.php?item=" . $madonhang ."&message=thao+tac+that+bai");
+                break;
+            default:
+                break;
+        }
+    }
+}
+require_once '../part/common_end_page.php';
+?>

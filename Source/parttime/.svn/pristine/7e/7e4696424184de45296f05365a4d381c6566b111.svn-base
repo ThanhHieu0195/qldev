@@ -1,0 +1,526 @@
+//Show loading panel
+function showLoading() {
+    var html = "";
+    
+    html += "<tr><td colspan='8' style='text-align: center;'>";
+    html += "<div id='example_wrapper' class='dataTables_wrapper' role='grid'>";
+    html += "    <div id='example_processing' class='dataTables_processing' style='visibility: visible;'>";
+    html += "        <img src='../resources/images/loading54.gif' alt='loading' />";
+    html += "        Processing...";
+    html += "    </div>";
+    html += "</div>";
+    html += "</td></tr>";
+    
+    $("#items_body").html(html);
+}
+
+// Show notification message
+function showNotification(type, message) {
+    var html = "";
+    
+    html += "<tr><td colspan='8' style=''>";
+    html += "<div class='notification " + type + " png_bg'>";
+    html += "    <div>";
+    html += message;
+    html += "    </div>";
+    html += "</div>";
+    html += "</td></tr>";
+    
+    $("#items_body").html(html);
+}
+
+//Load detail of swap toke
+function loadSwappingDetail(swap_uid) {
+    var ctrlId = "#items_body";
+    
+    // Show loading
+    showLoading();
+    
+    // Send AJAX request
+    $.ajax({
+        url: "../ajaxserver/items_swapping_server.php",
+        type: 'POST',
+        data: String.format('load_swapping_detail={0}&swap_uid={1}', 'true', swap_uid),
+        success: function (data, textStatus, jqXHR) {
+            try {
+                var obj = jQuery.parseJSON(data);
+                
+                if(obj.result == "success") {
+                    //var detail = obj.detail[0];
+                    // Clear loading
+                    $(ctrlId).html("");
+                    
+                    // Set values
+                    if (obj.detail.length > 0) {
+                        // Actions column
+                        if (obj.flag == 1) {
+                            $("#items_head").append("<th></th>");
+                        }
+                        
+                        for(i = 0; i < obj.detail.length; i++) {
+                            // Get a item
+                            var g = obj.detail[i];
+                            var row = String.format("<tr class='{0}'>", (i%2 == 0) ? "alt-row" : "");
+                            
+                            // Set row's data
+                            row += (String.format("<td>{0}</td>", i + 1));
+                            row += (String.format("<td><a class='blue-violet' type='thumbnail' id='img_{0}' href='javascript:' data='{1}'>{2}</a></td>", g.uid, g.image, g.product_id));
+                            row += (String.format("<td>{0}</td>", g.size));
+                            row += (String.format("<td>{0}</td>", g.name));
+                            row += (String.format("<td>{0}</td>", g.unit));
+                            row += (String.format("<td>{0}</td>", g.amount));
+                            row += (String.format("<td>{0}</td>", g.price));
+                            row += (String.format("<td><div id='status_{0}' class='box_content_player'><span class='{1}'>{2}</span>{3}</div></td>", 
+                                                   g.uid,
+                                                   g.status.css, 
+                                                   g.status.text, 
+                                                   (g.note == "") ? "" : String.format("<img class='note' id='note_{0}' alt='note' src='../resources/images/icons/information.png' data='{1}' />", g.uid, g.note)
+                                                   ));
+                            // Action buttons
+                            if (obj.flag == 1) {
+                                if (g.actions == 1) {
+                                    row += (String.format("<td><div id='actions_{0}'><a rel='modal' href='#messages' title='Nhận hàng vào kho' onclick='showDialog(\"{1}\", \"{2}\", \"{3}\", \"{4}\", \"{5}\");'>\
+                                                               <img src='../resources/images/icons/ingoing_16.png' alt='accept'></a>\
+                                                               &nbsp;\
+                                                               <a rel='modal' href='#messages' title='Trả hàng lại' onclick='showDialog(\"{6}\", \"{7}\", \"{8}\", \"{9}\", \"{10}\");'>\
+                                                               <img src='../resources/images/icons/outgoing_16.png' alt='reject'></a>\
+                                                           </div></td>", g.uid, 
+                                                           g.uid, g.product_id, g.amount, "delivery", "single",
+                                                           g.uid, g.product_id, g.amount, "return",  "single"));
+                                } else {
+                                    row += "<td></td>";
+                                }
+                            }
+                            row += "</tr>";
+                            
+                            // Add row to table
+                            $(ctrlId).append(row);
+                        }
+                        
+                        // Image tooltip
+                        $('a[type="thumbnail"]').tooltip({
+                            delay: 50,
+                            showURL: false,
+                            bodyHandler: function() {
+                                return $("<img />").attr("src", "../" + $(this).attr('data'));
+                            }
+                        });
+                        
+                        // Tooltip (note)
+                        $('.note').tooltip({
+                            delay: 20, 
+                            showURL: false,
+                            extraClass: "right",
+                            bodyHandler: function() {
+                                return $(this).attr("data");
+                            }
+                        });
+                        
+                        // Facebox
+                        $('a[rel*=modal]').facebox();
+                        
+                        // Delivery/Return all actions
+                        if (obj.finished == 0 && obj.flag == 1) {
+                            $("#swap_actions").show();
+                        } else {
+                            $("#swap_actions").hide();
+                        }
+                        
+                        // Report actions
+                        if (obj.report == 1) {
+                            $("#report_actions").show();
+                        } else {
+                            $("#report_actions").hide();
+                        }
+						  if (obj.shipping == 1) {
+                            $("#report_shipping").show();
+                        } else {
+                            $("#report_shipping").hide();
+                        }
+                    }
+                } else {
+                    $("#swap_actions").hide();
+                    showNotification('error', obj.message);
+                }
+            }
+            catch(err) {
+                //Handle errors here
+                showNotification('error', err);
+           }
+        },
+        timeout: 10000,      // timeout (in miliseconds)
+        error: function(qXHR, textStatus, errorThrown) {
+            if (textStatus === "timeout") {
+                // request timed out, do whatever you need to do here
+            }
+            else {
+                // some other error occurred
+            }
+            showNotification('error', errorThrown);
+        }
+    });
+}
+
+// Show dialog voi cac thong so thiet lap cho viec xu ly san pham
+// action: 'delivery', 'return'
+// type: 'single', 'multi'
+function showDialog(item_uid, product_id, amount, action, type) {
+    if(type == "multi") {
+        $("#dialog_description").hide();
+    } else {
+        $("#dialog_description").show();
+        $("#product_name").html(product_id);
+        $("#amount_name").html(amount);
+    }
+    
+    // Hidden form controls
+    $("#item_uid").val(item_uid);
+    $("#action").val(action);
+    $("#swap_type").val(type);
+    
+    // Set caption for button
+    if(action == 'delivery') {
+        $("#swap_processing").val("Nhận hàng");
+        $("#dialog_title").text("Nhận hàng vào kho");
+    } else {
+        $("#swap_processing").val("Trả hàng");
+        $("#dialog_title").text("Trả hàng lại");
+    }
+    
+    $('#notification_msg').html("");
+}
+
+//Site: http://joekuan.wordpress.com/2009/06/12/ajax-a-simplified-version-of-file-upload-form-using-iframe/
+function getFrameByName(name) {
+  for (var i = 0; i < frames.length; i++)
+    if (frames[i].name == name)
+      return frames[i];
+ 
+  return null;
+}
+
+// Show notification message when processing swapping item(s)
+function showSwappingMessage(type, message) {
+    var html = "";
+    
+    html += "<div class='notification " + type + " png_bg'>";
+    html += "    <div>";
+    html += message;
+    html += "    </div>";
+    html += "</div>";
+    
+    jQuery(document).trigger('close.facebox');
+    $('#notification_msg').html(html);
+    $('#popup').bPopup();
+}
+
+/* Same as the one defined in OpenJS */
+function processSwappingItem(name) {
+    var frame = getFrameByName(name);
+    if (frame) {
+      ret = frame.document.getElementsByTagName("body")[0].innerHTML;
+  
+      /* If we got JSON, try to inspect it and display the result */
+      if (ret.length) {
+        /* Convert from JSON to Javascript object */
+        try {
+             //var json = eval("("+ret+")");
+             var json = $.parseJSON(ret);
+             
+             /* Process data in json ... */
+             // Single item
+             if (json.swap_type == "single") {
+                 if (json.result == "error") {
+                     showSwappingMessage("error", json.message);
+                 } else {
+                     if (json.result == "success" || json.result == "warning") {
+                         // Refresh item status
+                         if (json.item.flag == 1) {
+                             var html = (String.format("<span class='{0}'>{1}</span>{2}", 
+                                                       json.item.css, 
+                                                       json.item.text, 
+                                                       (json.item.note == "") ? "" : String.format("<img class='note' id='note_{0}' alt='note' src='../resources/images/icons/information.png' data='{1}' />", json.item.uid, json.item.note)
+                                        ));
+                             
+                             $("#status_" + json.item.uid).html(html);
+                             // Tooltip (note)
+                             $('.note').tooltip({
+                                 delay: 20, 
+                                 showURL: false,
+                                 extraClass: "right",
+                                 bodyHandler: function() {
+                                     return $(this).attr("data");
+                                 }
+                             });
+                             
+                             // Actions button
+                             $("#actions_" + json.item.uid).html("");
+                         }
+                         
+                         // Refresh token status
+                         if (json.token.flag == 1) {
+                             $("#swap_status").html(String.format("<span class='{0}'>{1}</span>", json.token.css, json.token.text));
+                             $("#swap_actions").hide();
+                         }
+                         
+                         // Close dialog
+                         if (json.result == "success") {
+                             jQuery(document).trigger('close.facebox');
+                         } else {
+                             // Show warning message
+                             var htmlText = json.message;
+                             
+                             if (json.detail.length != 0) {
+                                 for (i = 0; i < json.detail.length; i++) {
+                                     var d = json.detail[i];
+                                     htmlText += String.format("<br />&nbsp;&nbsp;• <span class='orange'>{0}</span>: {1}", 
+                                                                d.title, d.error);
+                                 }
+                             }
+                             
+                             showSwappingMessage("attention", htmlText);
+                         }
+                     }
+                 }
+             } else { // Multi items
+                 if (json.result == "error") {
+                     showSwappingMessage("error", json.message);
+                 } else {
+                     // Refresh item status
+                     if(json.item.length > 0) {
+                         for(i = 0; i < json.item.length; i++) {
+                             // Get a item
+                             var g = json.item[i];
+                             
+                             if (g.flag == 1) {
+                                 var html = (String.format("<span class='{0}'>{1}</span>{2}", 
+                                                           g.css, 
+                                                           g.text, 
+                                                           (g.note == "") ? "" : String.format("<img class='note' id='note_{0}' alt='note' src='../resources/images/icons/information.png' data='{1}' />", g.uid, g.note)
+                                            ));
+                                 
+                                 $("#status_" + g.uid).html(html);
+                                 // Tooltip (note)
+                                 $('.note').tooltip({
+                                     delay: 20, 
+                                     showURL: false,
+                                     extraClass: "right",
+                                     bodyHandler: function() {
+                                         return $(this).attr("data");
+                                     }
+                                 });
+                                 
+                                 // Actions button
+                                 $("#actions_" + g.uid).html("");
+                             }
+                         }
+                     }
+                     
+                     // Refresh token status
+                     if (json.token.flag == 1) {
+                         $("#swap_status").html(String.format("<span class='{0}'>{1}</span>", json.token.css, json.token.text));
+                         $("#swap_actions").hide();
+                     }
+                     
+                     // Close dialog
+                     jQuery(document).trigger('close.facebox');
+                     
+                     // Show message popup
+                     var htmlText = json.message;
+                     
+                     if (json.detail.length != 0) {
+                         for (i = 0; i < json.detail.length; i++) {
+                             var d = json.detail[i];
+                             htmlText += String.format("<br />&nbsp;&nbsp;• Sản phẩm <span class='orange'>{0}</span> - Lỗi: {1}", 
+                                                        d.product_id, d.error);
+                         }
+                     }
+                     
+                     showSwappingMessage("information", htmlText);
+                 }
+             }
+        }
+        catch(err) {
+             //Handle errors here
+             showSwappingMessage('error', err);
+        }
+        
+        frame.document.getElementsByTagName("body")[0].innerHTML = '';
+      }
+   }
+ }
+
+// Show report message
+function showReportNotification(type, message) {
+    var html = "";
+    
+    if (message != "") {
+        html += "<div class='notification " + type + " png_bg'>";
+        html += "    <div>";
+        html += message;
+        html += "    </div>";
+        html += "</div>";
+    }
+    
+    $("#report_msg").html(html);
+}
+
+// Report a swapping token
+// action = 'accept' / 'cancel'
+function reportSwapping(action) {
+    var ctrlId = "#report_actions";
+    $(ctrlId).hide();
+    
+    // Show loading
+    $("#report_msg").html("<center style='padding: 10px;'><img src='../resources/images/loading54.gif' alt='loading' /></center>");
+    
+    // Send AJAX request
+    $.ajax({
+        url: "../ajaxserver/items_swapping_server.php",
+        type: 'POST',
+        data: String.format('report_swapping={0}&swap_uid={1}&action={2}', 'true', $('#swap_uid').val(), action),
+        success: function (data, textStatus, jqXHR) {
+            try {
+                var obj = jQuery.parseJSON(data);
+                
+                if(obj.result == "success") {
+                    showReportNotification('success', obj.message);
+                } else {
+                    $(ctrlId).show();
+                    showReportNotification('error', obj.message);
+                }
+            }
+            catch(err) {
+                //Handle errors here
+                $(ctrlId).show();
+                showReportNotification('error', err);
+           }
+        },
+        timeout: 10000,      // timeout (in miliseconds)
+        error: function(qXHR, textStatus, errorThrown) {
+            if (textStatus === "timeout") {
+                // request timed out, do whatever you need to do here
+            }
+            else {
+                // some other error occurred
+            }
+            $(ctrlId).show();
+            showReportNotification('error', errorThrown);
+        }
+    });
+}
+
+// Report a swapping token
+// action = 'delivery
+function reportShipping(action) {
+    var ctrlId = "#report_shipping";
+    $(ctrlId).hide();
+    
+    // Show loading
+    $("#report_msg").html("<center style='padding: 10px;'><img src='../resources/images/loading54.gif' alt='loading' /></center>");
+    
+    // Send AJAX request
+    $.ajax({
+        url: "../ajaxserver/items_swapping_server.php",
+        type: 'POST',
+        data: String.format('report_shipping={0}&swap_uid={1}&action={2}', 'true', $('#swap_uid').val(), action),
+        success: function (data, textStatus, jqXHR) {
+            try {
+                var obj = jQuery.parseJSON(data);
+                
+                if(obj.result == "success") {
+                    showReportNotification('success', obj.message);
+                } else {
+                    $(ctrlId).show();
+                    showReportNotification('error', obj.message);
+                }
+            }
+            catch(err) {
+                //Handle errors here
+                $(ctrlId).show();
+                showReportNotification('error', err);
+           }
+        },
+        timeout: 10000,      // timeout (in miliseconds)
+        error: function(qXHR, textStatus, errorThrown) {
+            if (textStatus === "timeout") {
+                // request timed out, do whatever you need to do here
+            }
+            else {
+                // some other error occurred
+            }
+            $(ctrlId).show();
+            showReportNotification('error', errorThrown);
+        }
+    });
+}
+/**
+ * Notes list of an swapping item
+ */
+function showSavingNoteError(message, showed) {
+    if (showed) {
+        $('#note_saving_error').show();
+        $('#note_saving_error_message').html(message);
+    }
+    else {
+        $('#note_saving_error').hide();
+    }
+}
+
+function saveNote() {
+    var message = $('#ghichu').val();
+    var swap_uid = $('#swap_uid').val();
+    if (message != "") {
+        $('#save_note').hide();
+        $('#save_loading').show();
+        showSavingNoteError('', false);
+    
+        // Send AJAX request
+        $.ajax({
+            url: "../ajaxserver/items_swapping_server.php",
+            type: 'POST',
+            data: String.format('create_note={0}&swap_uid={1}&message={2}', 'true', swap_uid, message),
+            success: function (data, textStatus, jqXHR) {
+                try {
+                    var obj = jQuery.parseJSON(data);
+                    
+                    if(obj.result == "success") {
+                        // Add new note to notes list
+                        var htmlText = String.format("<div class='notification information png_bg'>\
+                                                        <div><span class='blue-violet'>{0} - {1}</span><br />{2}</div>\
+                                                      </div>", 
+                                                      obj.note.create_by, 
+                                                      obj.note.create_date, 
+                                                      obj.note.message);
+                        $('#notes_list').append(htmlText);
+                    } else {
+                        showSavingNoteError(obj.message, true);
+                    }
+                }
+                catch(err) {
+                    //Handle errors here
+                    showSavingNoteError(err, true);
+               }
+               
+               $('#ghichu').val('');
+               $('#save_note').show();
+               $('#save_loading').hide();
+            },
+            timeout: 10000,      // timeout (in miliseconds)
+            error: function(qXHR, textStatus, errorThrown) {
+                if (textStatus === "timeout") {
+                    // request timed out, do whatever you need to do here
+                }
+                else {
+                    // some other error occurred
+                }
+                showSavingNoteError(errorThrown, true);
+            }
+        });
+    }
+}
+
+// DOM load
+$(function() {
+    loadSwappingDetail($("#swap_uid").val());
+});
