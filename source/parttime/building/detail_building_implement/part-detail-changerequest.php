@@ -1,3 +1,9 @@
+<?php
+require_once "../models/duyetphatsinh.php";
+$duyetphatsinh = new duyetphatsinh();
+
+$data = $duyetphatsinh->phatsinhdaduyet($id);
+?>
  <div class="content-box-content">
     <div class="tab-content default-tab">
         <div id="dt_example">
@@ -19,6 +25,14 @@
                             </tr>
                         </thead>
                         <tbody>
+                        <?php
+                        $format = '<tr> <td>%1$s</td> <td>%2$s</td> <td>%3$s</td> <td>%4$s</td>
+                                        <td>%5$s</td> <td>%6$s</td> <td>%7$s</td> <td>%8$s</td> <td>%9$s</td> <td>%10$s</td> </tr>';
+                        foreach ($data as $index => $arr) {
+                            echo sprintf($format, $index+1, $arr['tenhangmuc'], $arr['tenvattu'], $arr['ngayyeucau'],
+                                $arr['khoiluongbandau'], $arr['khoiluongthaydoi'], $arr['nhanvienyeucau'], $arr['nhanvienduyet'], $arr['trangthai']==0?'Chờ duyệt':'Đã duyệt', $arr['ghichu']);
+                        }
+                        ?>
                         </tbody>
                     </table>
 

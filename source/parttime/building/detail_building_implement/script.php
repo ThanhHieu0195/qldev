@@ -182,22 +182,38 @@
             $(parent + " .soluongthucte").attr("readonly", false); 
         }
 
-        function addRowHtml(id_category) {
-            var parent = String.format('table[idcategory="{0}"] tbody', id_category);
-            var fm = data_material_category[id_category]['fm'];
+//        function addRowHtml(id_category) {
+//            var parent = String.format('table[idcategory="{0}"] tbody', id_category);
+//            var fm = data_material_category[id_category]['fm'];
+//
+//            var data = {"method":"take-id-detail-material-category"};
+//            $.post(path, data, function(data, textStatus, xhr) {
+//                json = jQuery.parseJSON(data);
+//                var idrow = parseInt(json.result) + 1;
+//
+//                idrow = createNewIdRow(idrow);
+//                fm = String.format(fm, idrow);
+//                $(parent).append(fm.replace('disabled',''));
+//                $('input[idadd="'+id_category+'"]').prop("disabled", true);
+//            });
+//        }
 
-            var data = {"method":"take-id-detail-material-category"};
-            $.post(path, data, function(data, textStatus, xhr) {
-                json = jQuery.parseJSON(data);
-                var idrow = parseInt(json.result) + 1;
+        function show_form_add_material(idhangmuc) {
+            var name_form = "form[name=\"themvattu_"+idhangmuc+"\"]";
+            var name_button_clicked = "input[idadd='"+idhangmuc+"']";
+            var status = $(name_form).attr('status');
+            status = parseInt(status);
+            if (status == 0) {
+                $(name_form).show(500);
+                $(name_button_clicked).val('Ẩn');
+            } else {
+                $(name_form).hide(500);
+                $(name_button_clicked).val('Phát sinh');
 
-                idrow = createNewIdRow(idrow);
-                fm = String.format(fm, idrow);
-                $(parent).append(fm.replace('disabled',''));
-                $('input[idadd="'+id_category+'"]').prop("disabled", true);
-            });
+            }
+            $(name_form).attr('status', 1-status);
         }
-  
+
         function createNewIdRow(id_last) {
             var num = $('tr[idrow="+id_last+" ]').length;
             return parseInt(id_last) + num;
@@ -337,12 +353,13 @@
             $('input[name="show-form-category"]').click(function(event) {
                 $('input[name="show-form-category"]').hide();
                 $('input[name="hide-form-category"]').show();
-                $('#f-addcategory').show();
+                $('#f-randomcategory').show();
             });
              $('input[name="hide-form-category"]').click(function(event) {
                 $('input[name="show-form-category"]').show();
                 $('input[name="hide-form-category"]').hide();
-                $('#f-addcategory').hide();
+                $('#f-randomcategory').hide();
+                $('.child-randomcategory').hide();
              });
              
             $("select[name='add_id_category']").chosen();
@@ -373,5 +390,31 @@
             expect_money = format_num(expect_money);
             expect_money = number2string(expect_money);
             $('input[name="expect_money_category'+token+'"]').val(expect_money);
+        }
+
+        function showProcessCategoryDialog() {
+            var idhangmuc = $('#f-randomcategory select[name="add_id_category"]').val();
+            if ( idhangmuc != '' ) {
+                $('#f-randomcategory').hide();
+                var tenhangmuc  = $('#f-randomcategory select[name="add_id_category"] option[value="'+idhangmuc+'"]').html();
+                $('.child-randomcategory .title span').html(tenhangmuc);
+                $('.child-randomcategory input[name="idhangmuc"]').val(idhangmuc);
+//                insert
+                if ( list_category_id.indexOf(idhangmuc) == -1 ) {
+                    $('#f-addcategory note').css('color', 'blue').html('Hạng mục chưa tồn tại');
+                    $('#f-addcategory input[name="khoiluongcongviechientai"]').val(0);
+                    $('#f-addcategory').show();
+                }
+//                update
+                else {
+                    $('#f-addcategory note').css('color', 'blue').html('Hạng mục đã tồn tại');
+                    $('#f-addcategory input[name="khoiluongcongviechientai"]').val(arr_detail[idhangmuc].khoiluongthucte);
+                    if ( arr_detail[idhangmuc].trangthai > 4 ) {
+                        $('#f-addcategory note').css('color', 'red').html('Hạng mục đã hoàn thành');
+                        $('#f-addcategory input[name="addcategory"] ').remove();
+                    }
+                    $('#f-addcategory').show();
+                }
+            }
         }
     </script>

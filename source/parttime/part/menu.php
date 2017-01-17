@@ -690,6 +690,10 @@ function f1(objButton){
                         <?php if (in_array(F_LIST_BUILDING_VATTU, $arr[KEY_FUNCTION])): ?>
                             <li><a class="<?php get_item_css(F_LIST_BUILDING_VATTU); ?>" href="../building/building_group_management.php">Quản lý thầu phụ</a></li>
                         <?php endif; ?>
+
+                        <?php if (in_array(F_LIST_BUILDING_IMPLEMENT, $arr[KEY_FUNCTION])): ?>
+                            <li><a class="<?php get_item_css(F_LIST_BUILDING_IMPLEMENT); ?>" href="../building/duyetphatsinh.php">Duyệt phát sinh</a></li>
+                        <?php endif; ?>
                     </ul>
                 </li>
             <?php endif; ?>

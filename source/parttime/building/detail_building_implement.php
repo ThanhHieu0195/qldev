@@ -81,6 +81,10 @@ require_once "detail_building_implement/init.php";
 <script type="text/javascript">
     data_material_category = <?php echo json_encode($data_material_category) ?>;
     list_id_material = <?php echo json_encode($list_id_material) ?>;
+    list_id_material = <?php echo json_encode($list_id_material) ?>;
+
+    list_category_id = <?php echo json_encode($list_category_id); ?>;
+    arr_detail = <?php echo json_encode($arr_detail) ?>;
 </script>
 </html>
 <?php 

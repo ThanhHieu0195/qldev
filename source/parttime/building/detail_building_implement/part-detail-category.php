@@ -11,8 +11,8 @@
                                 <th>Nhóm</th>
                                 <th>DK bắt đầu</th>
                                 <th>DK kết thúc</th>
-                                <th>Bắt đầu</th>
-                                <th>Kết thúc</th>
+                                <th class="date">Bắt đầu</th>
+                                <th class="date">Kết thúc</th>
                                 <th>KL DT</th>
                                 <th>KL TT</th>
                                 <th>KL PS</th>
@@ -27,9 +27,11 @@
                         <?php
                             /*----------  danh sach id catogory  ----------*/
                            $list_category_id = array();
-                           $i=1; 
+                        $arr_detail = array();
+                            $i=1;
                            foreach ($data_detail as $obj):
                                 $token = $obj['idhangmuc'];
+                                $arr_detail[$token] = $obj;
                                 $list_category_id[] = $token;
                                 $songaythicong = $obj['songaythicong'];
                                 $tenhangmuc = $obj['tenhangmuc'];
@@ -75,3 +77,4 @@
         </div>
     </div>
 </div>
+

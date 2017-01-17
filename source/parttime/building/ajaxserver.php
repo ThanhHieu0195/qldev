@@ -1,6 +1,7 @@
-<?php 
+<?php
+require_once '../config/constants.php';
 
-	if ( !isset($_REQUEST['action']) ) die;
+if ( !isset($_REQUEST['action']) ) die;
 	$action = $_REQUEST['action'];
 	$result = array( 'result'=>0, 'data' => array() );
 
@@ -23,5 +24,57 @@
 				break;
 		}
 	}
+
+    if ( $action == 'comfrim-duyetyeucau') {
+        $loai = $_POST['loai'];
+        $id = $_POST['id'];
+        $idcongtrinh = $_POST['idcongtrinh'];
+        $res = 0;
+        if ($loai == 0) {
+            require_once "../models/yeucauthaydoihangmuc.php";
+            $yeucauthaydoihangmuc = new yeucauthaydoihangmuc();
+            $res = $yeucauthaydoihangmuc->xacnhan($id);
+            if ($res) {
+                $result['result'] = 1;
+            }
+        }
+
+        if ($loai == 1) {
+            require_once "../models/yeucauthaydoivattu.php";
+            $yeucauthaydoivattu= new yeucauthaydoivattu();
+            $res = $yeucauthaydoivattu->xacnhan($id);
+            if ($res) {
+                $result['result'] = 1;
+            }
+        }
+        if ($res) {
+            require_once "../models/danhsachcongtrinh.php";
+            $model = new list_building();
+            $model->update_over_money($idcongtrinh);
+        }
+    }
+
+if ( $action == 'reject-duyetyeucau') {
+    $loai = $_POST['loai'];
+    $id = $_POST['id'];
+    $res = 0;
+    if ($loai == 0) {
+        require_once "../models/yeucauthaydoihangmuc.php";
+        $yeucauthaydoihangmuc = new yeucauthaydoihangmuc();
+        $res = $yeucauthaydoihangmuc->huy($id);
+        if ($res) {
+            $result['result'] = 1;
+        }
+    }
+
+    if ($loai == 1) {
+        require_once "../models/yeucauthaydoivattu.php";
+        $yeucauthaydoivattu= new yeucauthaydoivattu();
+        $res = $yeucauthaydoivattu->huy($id);
+        if ($res) {
+            $result['result'] = 1;
+        }
+    }
+}
 	echo json_encode($result);
  ?>

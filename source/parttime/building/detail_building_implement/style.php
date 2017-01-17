@@ -1,7 +1,6 @@
 <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
 <style type="text/css" title="currentStyle">
     @import "../resources/datatable/css/demo_page.css";
-    @import "../resources/datatable/css/demo_table.css";
 
     img { vertical-align: middle; }
     .detail-category input[type=text]{
@@ -13,10 +12,6 @@
 
     .demo caption, th, td {
         text-align: center;
-    }
-
-    .information_category {
-        padding: 15px 0;
     }
     .information_category label {
         background-color: #4e4e4e;
@@ -30,8 +25,8 @@
         color: #0024FF;
     }
     /*form addcategory*/
-    #f-addcategory .chosen-container {
-        width: 200px !important;
+    #f-randomcategory .chosen-container {
+        width: 150px !important;
     }
 
     table {
@@ -42,4 +37,10 @@
     th.index {width:10px;text-align:center;}
     th.num {width:100px;text-align:center;}
     th.text {width:150px;text-align:center;}
+    input[type='text'] {
+        width: 100%;
+    }
+
+    #f-addcategory note {
+    }
 </style>

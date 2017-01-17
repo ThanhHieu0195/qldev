@@ -34,7 +34,6 @@ class detail_category_building extends database {
     public $_trangthai = 'trangthai';
     public $_ghichu = 'ghichu';
 
-
     public function getdetailupdate($id) {
         $sql = "select hm.tenhangmuc, hm.dongiathdutoan, hm.songaythicong, tthm.mota, nhm.mota as nhom, t.*  
         from $this->_NAMETABLE t 
@@ -61,6 +60,7 @@ class detail_category_building extends database {
 
         $sql = "insert into $table($col) values('$val');";
         //error_log ("Add new" . $sql, 3, '/var/log/phpdebug.log');
+//        debug($sql);
         $this->setQuery( $sql );
         $result = $this->query();
         if ( $result ) {
@@ -124,6 +124,45 @@ class detail_category_building extends database {
         $result = $this->query();
         return $result;
     }
+
+     public function tontai($condition = array()) {
+         $where = '';
+         if ( count($condition) > 0 ) {
+             $where = mergeTostr($condition, 'and', '=');
+         }
+
+        $sql = "select count(*) num from $this->_NAMETABLE where $where;";
+         $this->setQuery($sql);
+         $result = $this->query();
+         $row = mysql_fetch_row($result);
+         if ($row[0] > 0) {
+            return $row[0];
+        }
+        return 0;
+    }
+    public  function laygiatri($condition = array(), $field = array() ) {
+        $field = implode(",", $field);
+        if ( empty($field) ) {
+            $field = "*";
+        }
+
+        $where = '';
+        if ( count($condition) > 0 ) {
+            $where = mergeTostr($condition, 'and', '=');
+        }
+        if ( $this->tontai( $condition ) ) {
+            $sql = "select $field from $this->_NAMETABLE where $where;";
+            $this->setQuery($sql);
+            $result = $this->query();
+            $arr = array();
+            while ( $row = mysql_fetch_assoc($result) ) {
+                $arr[] = $row;
+            }
+            return $arr;
+        }
+        return array();
+    }
+
 }
 
 // $model = new detail_category_building();

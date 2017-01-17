@@ -53,7 +53,16 @@ class material_category extends database {
             $arr[] = $row;
         }
         return $arr;
-    }   
+    }
+
+    public function get_by_id($id)
+    {
+        $sql = "select * from $this->_NAMETABLE where $this->_ID = '$id';";
+        $this->setQuery($sql);
+        $result = $this->query();
+        $row = mysql_fetch_array($result);
+        return $row;
+    }
 
     public function insert($id_category, $name_material, $spec, $price_low, $price_high, $unit)
     {

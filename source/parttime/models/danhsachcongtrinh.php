@@ -37,9 +37,8 @@ class list_building extends database {
     function getdetailupdate($id) {
         $sql = "select id, tencongtrinh, t.diachi, k.makhach, k.hoten, k.dienthoai1, k.dienthoai2, k.dienthoai3, giatridutoan, giatrithucte, giatriphatsinh, ngaykhoicong, ngaydukienhoanthanh, trangthai 
         from $this->_NAMETABLE t 
-            inner join khach k on k.makhach = t.makhach  
+            left join khach k on k.makhach = t.makhach  
         where $this->_ID = '$id'";
-
         $this->setQuery($sql);
         $result = $this->query();
         $arr = array();
